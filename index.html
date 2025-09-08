@@ -2,271 +2,294 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DownStream Lite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TV M3U Lite</title>
 <style>
-  body { margin: 0; padding: 0; font-family: Arial; background: #f0f0f0; color: #333; }
-  header { background: #27ae60; color: white; padding: 8px; text-align: center; position: fixed; top: 0; width: 100%; }
-  .controls { background: white; padding: 8px; position: fixed; top: 45px; width: 100%; border-bottom: 1px solid #ddd; }
-  input, select, button { padding: 6px; font-size: 14px; border: 1px solid #ccc; margin-bottom: 5px; width: 100%; }
-  button { background: #27ae60; color: white; border: none; }
-  .content { margin-top: 120px; padding: 5px; }
-  .category { background: white; margin-bottom: 5px; border: 1px solid #ddd; }
-  .category-header { padding: 8px; font-weight: bold; }
-  .items { display: none; border-top: 1px solid #ddd; }
-  .item { padding: 8px; border-bottom: 1px solid #eee; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #e0e0e0; color: #333; font-size: 14px; line-height: 1.3; }
+  .header { background: #2e7d32; color: white; padding: 10px 5px; text-align: center; position: fixed; top: 0; width: 100%; z-index: 100; }
+  .controls { background: white; padding: 8px 5px; position: fixed; top: 40px; width: 100%; z-index: 90; border-bottom: 1px solid #ccc; }
+  .search-row { display: flex; gap: 5px; margin-bottom: 5px; }
+  .search-row input { flex: 1; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
+  .search-row button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; }
+  .filter-row select { width: 100%; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
+  .content { margin-top: 110px; padding: 5px; }
+  .category { background: white; margin-bottom: 4px; border-radius: 3px; overflow: hidden; }
+  .category-header { padding: 8px; background: #f5f5f5; font-weight: bold; border-bottom: 1px solid #eee; }
+  .items { display: none; }
+  .item { padding: 8px; border-bottom: 1px solid #f0f0f0; }
+  .item:last-child { border-bottom: none; }
   .item a { color: #2c3e50; text-decoration: none; display: block; }
+  .load-more { padding: 8px; text-align: center; background: #f9f9f9; }
+  .load-more button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; }
   .loading { text-align: center; padding: 20px; }
-  .error { color: red; text-align: center; padding: 10px; }
+  .error { color: #d32f2f; text-align: center; padding: 10px; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1 style="margin:0;font-size:20px;">DownStream Lite</h1>
-</header>
+<div class="header">
+  <h1 style="font-size: 18px; margin: 0;">TV M3U Lite</h1>
+</div>
 
 <div class="controls">
-  <input type="text" id="search" placeholder="Pesquisar..." oninput="pesquisar()">
-  <select id="categoryFilter" onchange="filtrarPorCategoria()">
-    <option value="all">Todas categorias</option>
-  </select>
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Pesquisar..." onkeypress="if(event.key=='Enter')pesquisar()">
+    <button onclick="pesquisar()">Buscar</button>
+  </div>
+  <div class="filter-row">
+    <select id="categoryFilter" onchange="filtrarPorCategoria()">
+      <option value="all">Todas categorias</option>
+    </select>
+  </div>
 </div>
 
 <div class="content">
   <div id="categories"></div>
-  <div id="loading" class="loading">Carregando...</div>
+  <div id="loading" class="loading">Carregando lista...</div>
 </div>
 
 <script>
-// URL da sua lista M3U
+// Configurações
 const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts';
+const ITEMS_PER_PAGE = 8; // Reduzido para melhor performance
 
-// Variáveis globais
-let allItems = [];
-let categorias = {};
-let categoriaAtual = 'all';
-let itemsPorPagina = 10; // Apenas 10 itens por categoria inicialmente
+// Variáveis globais mínimas
+var allItems = [];
+var categorias = {};
+var categoriaAtual = 'all';
 
-// Carrega a lista M3U quando a página é carregada
+// Inicialização
 window.addEventListener('load', function() {
-  // Pequeno delay para permitir renderização inicial
-  setTimeout(function() {
-    carregarListaM3U();
-  }, 300);
+  setTimeout(carregarListaM3U, 100);
 });
 
-// Função para carregar a lista M3U
+// Carregar lista M3U
 function carregarListaM3U() {
-  // Mostra apenas loading
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('categories').innerHTML = '';
+  showLoading();
   
-  // Usando uma requisição sincrona para economizar memória (não recomendado normalmente, mas necessário para dispositivos antigos)
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', M3U_URL, false); // Sincrono - cuidado com bloqueio de UI
-  try {
-    xhr.send();
-    if (xhr.status === 200) {
-      processarM3U(xhr.responseText);
-    } else {
-      document.getElementById('loading').innerHTML = '<div class="error">Erro ao carregar a lista</div>';
+  xhr.open('GET', M3U_URL);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        processarM3U(xhr.responseText);
+        hideLoading();
+      } else {
+        showError('Erro ao carregar');
+      }
     }
-  } catch (error) {
-    document.getElementById('loading').innerHTML = '<div class="error">Erro de conexão</div>';
-  }
+  };
+  xhr.send();
 }
 
-// Função para processar o texto M3U
-function processarM3U(m3uText) {
-  var lines = m3uText.split('\n');
+// Processar conteúdo M3U
+function processarM3U(text) {
   allItems = [];
   categorias = {};
+  
+  var lines = text.split('\n');
+  var currentItem = null;
   
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i].trim();
     
     if (line.startsWith('#EXTINF:')) {
-      // Extrai informações básicas da linha EXTINF (sem regex para performance)
-      var groupTitle = 'Geral';
-      var name = '';
+      currentItem = parseExtInf(line);
+    } 
+    else if (currentItem && line && !line.startsWith('#') && line.startsWith('http')) {
+      currentItem.url = line;
+      allItems.push(currentItem);
       
-      // Extrai group-title
-      var groupIndex = line.indexOf('group-title="');
-      if (groupIndex > -1) {
-        var start = groupIndex + 13;
-        var end = line.indexOf('"', start);
-        if (end > -1) {
-          groupTitle = line.substring(start, end);
-        }
+      if (!categorias[currentItem.categoria]) {
+        categorias[currentItem.categoria] = [];
       }
+      categorias[currentItem.categoria].push(currentItem);
       
-      // Extrai o nome (está depois da última vírgula)
-      var lastComma = line.lastIndexOf(',');
-      if (lastComma > -1) {
-        name = line.substring(lastComma + 1);
-      }
-      
-      // A próxima linha deve ser a URL
-      if (i + 1 < lines.length) {
-        var url = lines[i + 1].trim();
-        if (url && !url.startsWith('#') && url !== '') {
-          allItems.push({
-            categoria: groupTitle,
-            nome: name,
-            url: url
-          });
-          
-          if (!categorias[groupTitle]) {
-            categorias[groupTitle] = [];
-          }
-          categorias[groupTitle].push({
-            nome: name,
-            url: url
-          });
-          
-          i++; // Pula a linha da URL
-        }
-      }
+      currentItem = null;
     }
   }
   
-  // Preenche o seletor de categorias
-  preencherSeletorCategorias();
-  
-  // Renderiza as categorias
+  preencherFiltroCategorias();
   filtrarPorCategoria();
-  
-  // Esconde o loading
-  document.getElementById('loading').style.display = 'none';
 }
 
-// Função para preencher o seletor de categorias
-function preencherSeletorCategorias() {
+// Parse simples de EXTINF
+function parseExtInf(line) {
+  var item = { categoria: 'Geral', nome: '', url: '' };
+  
+  // Extrair group-title
+  var gtStart = line.indexOf('group-title="');
+  if (gtStart > -1) {
+    var gtEnd = line.indexOf('"', gtStart + 13);
+    if (gtEnd > -1) {
+      item.categoria = line.substring(gtStart + 13, gtEnd);
+    }
+  }
+  
+  // Extrair nome
+  var lastComma = line.lastIndexOf(',');
+  if (lastComma > -1) {
+    item.nome = line.substring(lastComma + 1).trim();
+  }
+  
+  return item;
+}
+
+// Preencher filtro de categorias
+function preencherFiltroCategorias() {
   var select = document.getElementById('categoryFilter');
-  // Mantém a opção "Todas as categorias"
-  while (select.options.length > 1) {
-    select.remove(1);
-  }
+  while (select.options.length > 1) select.remove(1);
   
-  // Ordena categorias alfabeticamente
-  var sortedCategories = Object.keys(categorias).sort();
-  
-  for (var i = 0; i < sortedCategories.length; i++) {
-    var cat = sortedCategories[i];
-    var option = document.createElement('option');
-    option.value = cat;
-    option.textContent = cat;
-    select.appendChild(option);
+  var cats = Object.keys(categorias).sort();
+  for (var i = 0; i < cats.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = cats[i];
+    opt.textContent = cats[i];
+    select.appendChild(opt);
   }
 }
 
-// Função para filtrar por categoria
+// Filtrar por categoria
 function filtrarPorCategoria() {
-  var select = document.getElementById('categoryFilter');
-  categoriaAtual = select.value;
+  categoriaAtual = document.getElementById('categoryFilter').value;
   renderizarCategorias();
 }
 
-// Função para renderizar categorias
+// Renderizar categorias
 function renderizarCategorias() {
   var container = document.getElementById('categories');
   container.innerHTML = '';
   
-  if (Object.keys(categorias).length === 0) {
-    container.innerHTML = '<div class="category">Nenhum canal encontrado</div>';
-    return;
-  }
+  var catsToShow = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
   
-  var categoriasParaRenderizar = {};
-  
-  if (categoriaAtual === 'all') {
-    categoriasParaRenderizar = categorias;
-  } else if (categorias[categoriaAtual]) {
-    categoriasParaRenderizar[categoriaAtual] = categorias[categoriaAtual];
-  }
-  
-  // Ordena categorias alfabeticamente
-  var sortedCategories = Object.keys(categoriasParaRenderizar).sort();
-  
-  for (var i = 0; i < sortedCategories.length; i++) {
-    var cat = sortedCategories[i];
-    var items = categoriasParaRenderizar[cat];
+  for (var i = 0; i < catsToShow.length; i++) {
+    var cat = catsToShow[i];
+    var items = categorias[cat] || [];
     
-    var catDiv = document.createElement('div');
-    catDiv.className = 'category';
+    if (items.length === 0) continue;
     
-    var headerDiv = document.createElement('div');
-    headerDiv.className = 'category-header';
-    headerDiv.innerHTML = cat + ' (' + items.length + ')';
-    
-    var itemsDiv = document.createElement('div');
-    itemsDiv.className = 'items';
-    itemsDiv.id = 'items-' + i;
-    
-    // Evento de clique para expandir/recolher
-    headerDiv.onclick = (function(div) {
-      return function() {
-        div.style.display = div.style.display === 'block' ? 'none' : 'block';
-      };
-    })(itemsDiv);
-    
-    // Adiciona apenas alguns itens inicialmente para performance
-    var maxItemsToShow = Math.min(items.length, itemsPorPagina);
-    for (var j = 0; j < maxItemsToShow; j++) {
-      var it = items[j];
-      var itemDiv = document.createElement('div');
-      itemDiv.className = 'item';
-      itemDiv.innerHTML = '<a href="' + it.url + '">' + it.nome + '</a>';
-      itemsDiv.appendChild(itemDiv);
-    }
-    
-    // Se houver mais itens, adiciona um botão para carregar mais
-    if (items.length > itemsPorPagina) {
-      var moreButton = document.createElement('button');
-      moreButton.textContent = 'Carregar mais (' + (items.length - itemsPorPagina) + ')';
-      moreButton.onclick = (function(allItems, container, cat) {
-        return function() {
-          for (var k = itemsPorPagina; k < allItems.length; k++) {
-            var it = allItems[k];
-            if (it.categoria === cat) {
-              var itemDiv = document.createElement('div');
-              itemDiv.className = 'item';
-              itemDiv.innerHTML = '<a href="' + it.url + '">' + it.nome + '</a>';
-              container.appendChild(itemDiv);
-            }
-          }
-          this.style.display = 'none';
-        };
-      })(allItems, itemsDiv, cat);
-      itemsDiv.appendChild(moreButton);
-    }
-    
-    catDiv.appendChild(headerDiv);
-    catDiv.appendChild(itemsDiv);
+    var catDiv = createCategoryDiv(cat, items);
     container.appendChild(catDiv);
   }
 }
 
-// Função de pesquisa
+// Criar div de categoria
+function createCategoryDiv(cat, items) {
+  var div = document.createElement('div');
+  div.className = 'category';
+  
+  var header = document.createElement('div');
+  header.className = 'category-header';
+  header.innerHTML = cat + ' (' + items.length + ')';
+  header.onclick = function() {
+    var itemsDiv = this.nextElementSibling;
+    itemsDiv.style.display = itemsDiv.style.display === 'block' ? 'none' : 'block';
+  };
+  
+  var itemsDiv = document.createElement('div');
+  itemsDiv.className = 'items';
+  
+  // Adicionar itens iniciais
+  var count = Math.min(items.length, ITEMS_PER_PAGE);
+  for (var i = 0; i < count; i++) {
+    itemsDiv.appendChild(createItemDiv(items[i]));
+  }
+  
+  // Botão carregar mais se necessário
+  if (items.length > ITEMS_PER_PAGE) {
+    var loadMore = document.createElement('div');
+    loadMore.className = 'load-more';
+    loadMore.innerHTML = '<button onclick="loadMoreItems(this, \'' + cat + '\', ' + ITEMS_PER_PAGE + ')">Carregar mais (' + (items.length - ITEMS_PER_PAGE) + ')</button>';
+    itemsDiv.appendChild(loadMore);
+  }
+  
+  div.appendChild(header);
+  div.appendChild(itemsDiv);
+  return div;
+}
+
+// Criar div de item
+function createItemDiv(item) {
+  var div = document.createElement('div');
+  div.className = 'item';
+  div.innerHTML = '<a href="' + item.url + '" target="_blank">' + item.nome + '</a>';
+  return div;
+}
+
+// Carregar mais itens
+function loadMoreItems(button, cat, offset) {
+  var itemsDiv = button.parentElement.parentElement;
+  var items = categorias[cat];
+  
+  for (var i = offset; i < Math.min(items.length, offset + ITEMS_PER_PAGE); i++) {
+    itemsDiv.insertBefore(createItemDiv(items[i]), button.parentElement);
+  }
+  
+  if (i >= items.length) {
+    button.parentElement.remove();
+  } else {
+    button.textContent = 'Carregar mais (' + (items.length - i) + ')';
+    button.onclick = function() { loadMoreItems(this, cat, i); };
+  }
+}
+
+// Pesquisar
 function pesquisar() {
-  var query = document.getElementById('search').value.toLowerCase().trim();
+  var query = document.getElementById('searchInput').value.toLowerCase().trim();
   
   if (!query) {
-    // Se não há pesquisa, mostra todos os itens
-    var items = document.querySelectorAll('.item');
-    for (var i = 0; i < items.length; i++) {
-      items[i].style.display = 'block';
-    }
+    filtrarPorCategoria();
     return;
   }
   
-  // Filtra os itens
-  var items = document.querySelectorAll('.item');
-  for (var i = 0; i < items.length; i++) {
-    var itemText = items[i].textContent.toLowerCase();
-    items[i].style.display = itemText.indexOf(query) > -1 ? 'block' : 'none';
+  var container = document.getElementById('categories');
+  container.innerHTML = '';
+  
+  var results = [];
+  for (var cat in categorias) {
+    for (var i = 0; i < categorias[cat].length; i++) {
+      var item = categorias[cat][i];
+      if (item.nome.toLowerCase().includes(query)) {
+        results.push(item);
+      }
+    }
   }
+  
+  if (results.length === 0) {
+    container.innerHTML = '<div class="category">Nenhum resultado encontrado</div>';
+    return;
+  }
+  
+  // Agrupar resultados por categoria
+  var grouped = {};
+  for (var i = 0; i < results.length; i++) {
+    var cat = results[i].categoria;
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(results[i]);
+  }
+  
+  // Mostrar resultados
+  for (var cat in grouped) {
+    var catDiv = createCategoryDiv(cat, grouped[cat]);
+    // Expandir automaticamente os resultados de pesquisa
+    catDiv.querySelector('.items').style.display = 'block';
+    container.appendChild(catDiv);
+  }
+}
+
+// Utilitários
+function showLoading() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('categories').innerHTML = '';
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+
+function showError(msg) {
+  document.getElementById('loading').innerHTML = '<div class="error">' + msg + '</div>';
 }
 </script>
 
