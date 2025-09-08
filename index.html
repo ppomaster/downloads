@@ -5,16 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DownStream - Sua M3U na Mão</title>
 <style>
-  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
-  header { padding:1rem; background:#27ae60; color:white; text-align:center; }
-  .search-box { padding:1rem; text-align:center; }
-  .search-box input { width:70%; padding:0.5rem; font-size:1rem; }
-  .search-box button { padding:0.5rem 1rem; font-size:1rem; margin-left:5px; cursor:pointer; }
-  .category { padding:1rem; background:white; margin:0.5rem; border-radius:8px; cursor:pointer; }
-  .category:hover { background:#ecf0f1; }
-  .items { display:none; padding:0 1rem; margin-bottom:1rem; }
-  .item { padding:0.5rem; border-bottom:1px solid #ddd; }
-  .item a { text-decoration:none; color:#2c3e50; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
+  header { padding: 1rem; background: #27ae60; color: white; text-align: center; position: sticky; top: 0; z-index: 10; }
+  .container { padding: 0.5rem; }
+  .search-box { padding: 0.5rem; background: white; position: sticky; top: 68px; z-index: 9; }
+  .search-box input { width: 75%; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; }
+  .search-box button { width: 23%; padding: 0.5rem; font-size: 1rem; background: #27ae60; color: white; border: none; border-radius: 4px; }
+  .category { padding: 0.75rem; background: white; margin-bottom: 0.25rem; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; }
+  .category:hover { background: #ecf0f1; }
+  .items { display: none; background: #f9f9f9; }
+  .item { padding: 0.75rem; border-bottom: 1px solid #eee; }
+  .item a { text-decoration: none; color: #2c3e50; display: block; }
+  .loading { text-align: center; padding: 2rem; }
+  .error { color: red; text-align: center; padding: 1rem; }
+  .empty { text-align: center; padding: 1rem; color: #777; }
+  .category-name { font-weight: bold; }
+  .category-count { background: #27ae60; color: white; border-radius: 12px; padding: 0 8px; font-size: 0.8rem; }
 </style>
 </head>
 <body>
@@ -24,61 +31,203 @@
   <p>Sua lista M3U carregada!</p>
 </header>
 
-<div class="search-box">
-  <input type="text" id="search" placeholder="Pesquisar canais...">
-  <button onclick="pesquisar()">Pesquisar</button>
+<div class="container">
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Pesquisar canais..." onkeyup="pesquisar()">
+    <button onclick="pesquisar()">Pesquisar</button>
+  </div>
+  
+  <div id="categories"></div>
+  <div id="loading" class="loading">Carregando lista, aguarde...</div>
 </div>
 
-<div id="categories"></div>
-
 <script>
-// Exemplo de lista M3U convertida para JS
-const m3u = [
-  { categoria: 'Filmes', nome: 'Filme A', url: 'https://exemplo.com/filmeA.mp4' },
-  { categoria: 'Filmes', nome: 'Filme B', url: 'https://exemplo.com/filmeB.mp4' },
-  { categoria: 'Séries', nome: 'Série A Ep 1', url: 'https://exemplo.com/serieA1.mp4' },
-  { categoria: 'Séries', nome: 'Série A Ep 2', url: 'https://exemplo.com/serieA2.mp4' },
-  { categoria: 'Esportes', nome: 'Futebol Ao Vivo', url: 'https://exemplo.com/futebol.mp4' },
-];
+// URL da sua lista M3U
+const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts';
 
-// Agrupa por categoria
-const categorias = {};
-m3u.forEach(item => {
-  if(!categorias[item.categoria]) categorias[item.categoria] = [];
-  categorias[item.categoria].push(item);
+// Variáveis globais
+let allItems = [];
+let categorias = {};
+
+// Carrega a lista M3U quando a página é carregada
+window.addEventListener('DOMContentLoaded', () => {
+  carregarListaM3U();
 });
 
-// Cria HTML das categorias e itens
-const container = document.getElementById('categories');
-for(const cat in categorias){
-  const catDiv = document.createElement('div');
-  catDiv.className = 'category';
-  catDiv.textContent = cat;
+// Função para carregar a lista M3U
+async function carregarListaM3U() {
+  try {
+    const response = await fetch(M3U_URL);
+    if (!response.ok) {
+      throw new Error('Erro ao carregar a lista');
+    }
+    
+    const m3uText = await response.text();
+    processarM3U(m3uText);
+    document.getElementById('loading').style.display = 'none';
+  } catch (error) {
+    document.getElementById('loading').innerHTML = 
+      `<div class="error">Erro ao carregar a lista: ${error.message}</div>`;
+  }
+}
 
-  const itemsDiv = document.createElement('div');
-  itemsDiv.className = 'items';
-
-  categorias[cat].forEach(it=>{
-    const itemDiv = document.createElement('div');
-    itemDiv.className='item';
-    itemDiv.innerHTML=`<a href="${it.url}" target="_blank">${it.nome}</a>`;
-    itemsDiv.appendChild(itemDiv);
+// Função para processar o texto M3U
+function processarM3U(m3uText) {
+  const lines = m3uText.split('\n');
+  allItems = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    if (line.startsWith('#EXTINF:')) {
+      // Extrai informações da linha EXTINF
+      const info = parseExtInf(line);
+      
+      // A próxima linha deve ser a URL
+      if (i + 1 < lines.length) {
+        const url = lines[i + 1].trim();
+        if (url && !url.startsWith('#') && url !== '') {
+          allItems.push({
+            categoria: info.groupTitle || 'Geral',
+            nome: info.name,
+            url: url
+          });
+          i++; // Pula a linha da URL
+        }
+      }
+    }
+  }
+  
+  // Agrupa por categoria
+  categorias = {};
+  allItems.forEach(item => {
+    if (!categorias[item.categoria]) {
+      categorias[item.categoria] = [];
+    }
+    categorias[item.categoria].push(item);
   });
+  
+  // Renderiza as categorias
+  renderizarCategorias();
+}
 
-  catDiv.addEventListener('click', ()=>{
-    itemsDiv.style.display = itemsDiv.style.display==='block'?'none':'block';
-  });
+// Função para parsear a linha EXTINF
+function parseExtInf(line) {
+  const result = {
+    name: '',
+    groupTitle: 'Geral'
+  };
+  
+  // Extrai o nome (está depois da última vírgula)
+  const lastComma = line.lastIndexOf(',');
+  if (lastComma !== -1) {
+    result.name = line.substring(lastComma + 1);
+  }
+  
+  // Extrai group-title se existir
+  const groupTitleMatch = line.match(/group-title="([^"]*)"/);
+  if (groupTitleMatch && groupTitleMatch[1]) {
+    result.groupTitle = groupTitleMatch[1];
+  }
+  
+  // Tenta extrair o nome de tvg-name se o nome estiver vazio
+  if (!result.name || result.name.trim() === '') {
+    const tvgNameMatch = line.match(/tvg-name="([^"]*)"/);
+    if (tvgNameMatch && tvgNameMatch[1]) {
+      result.name = tvgNameMatch[1];
+    }
+  }
+  
+  return result;
+}
 
-  container.appendChild(catDiv);
-  container.appendChild(itemsDiv);
+// Função para renderizar categorias
+function renderizarCategorias() {
+  const container = document.getElementById('categories');
+  container.innerHTML = '';
+  
+  if (Object.keys(categorias).length === 0) {
+    container.innerHTML = '<div class="empty">Nenhum canal encontrado</div>';
+    return;
+  }
+  
+  // Ordena categorias alfabeticamente
+  const sortedCategories = Object.keys(categorias).sort();
+  
+  for (const cat of sortedCategories) {
+    const items = categorias[cat];
+    
+    const catDiv = document.createElement('div');
+    catDiv.className = 'category';
+    catDiv.innerHTML = `
+      <span class="category-name">${cat}</span>
+      <span class="category-count">${items.length}</span>
+    `;
+    
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'items';
+    itemsDiv.id = `items-${cat.replace(/\s+/g, '-')}`;
+    
+    // Adiciona os itens
+    items.forEach(it => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item';
+      itemDiv.innerHTML = `<a href="${it.url}" target="_blank">${it.nome}</a>`;
+      itemsDiv.appendChild(itemDiv);
+    });
+    
+    // Evento de clique para expandir/recolher
+    catDiv.addEventListener('click', () => {
+      const isVisible = itemsDiv.style.display === 'block';
+      itemsDiv.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    container.appendChild(catDiv);
+    container.appendChild(itemsDiv);
+  }
 }
 
 // Função de pesquisa
-function pesquisar(){
-  const query = document.getElementById('search').value.toLowerCase();
-  document.querySelectorAll('.items .item').forEach(item=>{
-    if(item.textContent.toLowerCase().includes(query)) item.style.display='block';
-    else item.style.display='none';
+function pesquisar() {
+  const query = document.getElementById('search').value.toLowerCase().trim();
+  
+  if (query === '') {
+    // Se a pesquisa estiver vazia, mostra todos os itens
+    Object.keys(categorias).forEach(cat => {
+      const itemsDiv = document.getElementById(`items-${cat.replace(/\s+/g, '-')}`);
+      if (itemsDiv) {
+        const items = itemsDiv.getElementsByClassName('item');
+        for (let i = 0; i < items.length; i++) {
+          items[i].style.display = 'block';
+        }
+      }
+    });
+    return;
+  }
+  
+  // Filtra os itens baseado na pesquisa
+  Object.keys(categorias).forEach(cat => {
+    const itemsDiv = document.getElementById(`items-${cat.replace(/\s+/g, '-')}`);
+    if (itemsDiv) {
+      const items = itemsDiv.getElementsByClassName('item');
+      let hasVisibleItems = false;
+      
+      for (let i = 0; i < items.length; i++) {
+        const itemText = items[i].textContent.toLowerCase();
+        if (itemText.includes(query)) {
+          items[i].style.display = 'block';
+          hasVisibleItems = true;
+        } else {
+          items[i].style.display = 'none';
+        }
+      }
+      
+      // Mostra ou esconde a categoria baseado se tem itens visíveis
+      const catDiv = itemsDiv.previousElementSibling;
+      if (catDiv && catDiv.classList.contains('category')) {
+        catDiv.style.display = hasVisibleItems ? 'flex' : 'none';
+      }
+    }
   });
 }
 </script>
