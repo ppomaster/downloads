@@ -1,40 +1,83 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <title>Minha Lista M3U</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DownStream - Sua M3U na Mão</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+  header { padding: 1rem; background: #27ae60; color: white; text-align: center; }
+  .search-box { padding: 1rem; text-align: center; }
+  .search-box input { width: 80%; padding: 0.5rem; font-size: 1rem; }
+  .category { padding: 1rem; background: white; margin: 0.5rem; border-radius: 8px; cursor: pointer; }
+  .category:hover { background: #ecf0f1; }
+  .items { display: none; padding: 0 1rem; margin-bottom: 1rem; }
+  .item { padding: 0.5rem; border-bottom: 1px solid #ddd; }
+  .item a { text-decoration: none; color: #2c3e50; }
+</style>
 </head>
 <body>
-  <h1>Lista VisionPlay</h1>
-  <div id="output">Carregando lista...</div>
 
-  <script>
-    const url = "https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts";
+<header>
+  <h1>DownStream</h1>
+  <p>Sua lista M3U carregada!</p>
+</header>
 
-    async function loadM3U() {
-      try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error("HTTP " + resp.status);
-        const text = await resp.text();
+<div class="search-box">
+  <input type="text" id="search" placeholder="Pesquisar canais...">
+</div>
 
-        const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-        let html = "<ul>";
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].startsWith("#EXTINF")) {
-            const title = lines[i].split(",").pop();
-            const link = lines[i + 1] || "";
-            html += `<li><b>${title}</b><br><a href="${link}" target="_blank">${link}</a></li>`;
-          }
-        }
-        html += "</ul>";
-        document.getElementById("output").innerHTML = html;
-      } catch (err) {
-        document.getElementById("output").innerHTML = 
-          "Erro ao carregar lista (provavelmente bloqueio CORS).<br>" + err;
-      }
-    }
+<!-- Categorias e itens gerados pelo JS -->
+<div id="categories"></div>
 
-    loadM3U();
-  </script>
+<script>
+// Exemplo de lista M3U convertida para JS
+const m3u = [
+  { categoria: 'Filmes', nome: 'Filme A', url: 'https://exemplo.com/filmeA.mp4' },
+  { categoria: 'Filmes', nome: 'Filme B', url: 'https://exemplo.com/filmeB.mp4' },
+  { categoria: 'Séries', nome: 'Série A Ep 1', url: 'https://exemplo.com/serieA1.mp4' },
+  { categoria: 'Séries', nome: 'Série A Ep 2', url: 'https://exemplo.com/serieA2.mp4' },
+  { categoria: 'Esportes', nome: 'Futebol Ao Vivo', url: 'https://exemplo.com/futebol.mp4' },
+];
+
+// Agrupa por categoria
+const categorias = {};
+m3u.forEach(item => {
+  if (!categorias[item.categoria]) categorias[item.categoria] = [];
+  categorias[item.categoria].push(item);
+});
+
+// Cria HTML
+const container = document.getElementById('categories');
+for (const cat in categorias) {
+  const catDiv = document.createElement('div');
+  catDiv.className = 'category';
+  catDiv.textContent = cat;
+  catDiv.onclick = () => itemsDiv.style.display = itemsDiv.style.display === 'block' ? 'none' : 'block';
+
+  const itemsDiv = document.createElement('div');
+  itemsDiv.className = 'items';
+
+  categorias[cat].forEach(it => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'item';
+    itemDiv.innerHTML = `<a href="${it.url}" target="_blank">${it.nome}</a>`;
+    itemsDiv.appendChild(itemDiv);
+  });
+
+  container.appendChild(catDiv);
+  container.appendChild(itemsDiv);
+}
+
+// Pesquisa simples
+document.getElementById('search').addEventListener('input', function() {
+  const query = this.value.toLowerCase();
+  document.querySelectorAll('.items .item').forEach(item => {
+    if (item.textContent.toLowerCase().includes(query)) item.style.display = 'block';
+    else item.style.display = 'none';
+  });
+});
+</script>
+
 </body>
 </html>
