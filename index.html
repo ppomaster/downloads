@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Minha Lista M3U</title>
+</head>
+<body>
+  <h1>Lista VisionPlay</h1>
+  <div id="output">Carregando lista...</div>
+
+  <script>
+    const url = "https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts";
+
+    async function loadM3U() {
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        const text = await resp.text();
+
+        const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+        let html = "<ul>";
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith("#EXTINF")) {
+            const title = lines[i].split(",").pop();
+            const link = lines[i + 1] || "";
+            html += `<li><b>${title}</b><br><a href="${link}" target="_blank">${link}</a></li>`;
+          }
+        }
+        html += "</ul>";
+        document.getElementById("output").innerHTML = html;
+      } catch (err) {
+        document.getElementById("output").innerHTML = 
+          "Erro ao carregar lista (provavelmente bloqueio CORS).<br>" + err;
+      }
+    }
+
+    loadM3U();
+  </script>
+</body>
+</html>
