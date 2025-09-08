@@ -9,9 +9,12 @@
   body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
   header { padding: 1rem; background: #27ae60; color: white; text-align: center; position: sticky; top: 0; z-index: 10; }
   .container { padding: 0.5rem; }
-  .search-box { padding: 0.5rem; background: white; position: sticky; top: 68px; z-index: 9; }
-  .search-box input { width: 75%; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; }
-  .search-box button { width: 23%; padding: 0.5rem; font-size: 1rem; background: #27ae60; color: white; border: none; border-radius: 4px; }
+  .controls { padding: 0.5rem; background: white; position: sticky; top: 68px; z-index: 9; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .search-box { flex: 1; min-width: 150px; }
+  .search-box input { width: 100%; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; }
+  .category-filter { flex: 1; min-width: 150px; }
+  .category-filter select { width: 100%; padding: 0.5rem; font-size: 1rem; border: 1px solid #ddd; }
+  button { padding: 0.5rem; font-size: 1rem; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; }
   .category { padding: 0.75rem; background: white; margin-bottom: 0.25rem; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; }
   .category:hover { background: #ecf0f1; }
   .items { display: none; background: #f9f9f9; }
@@ -32,9 +35,16 @@
 </header>
 
 <div class="container">
-  <div class="search-box">
-    <input type="text" id="search" placeholder="Pesquisar canais..." onkeyup="pesquisar()">
-    <button onclick="pesquisar()">Pesquisar</button>
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Pesquisar canais..." onkeyup="pesquisar()">
+    </div>
+    <div class="category-filter">
+      <select id="categoryFilter" onchange="filtrarPorCategoria()">
+        <option value="all">Todas as categorias</option>
+      </select>
+    </div>
+    <button onclick="carregarListaM3U()">Recarregar</button>
   </div>
   
   <div id="categories"></div>
@@ -48,6 +58,7 @@ const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=5
 // Variáveis globais
 let allItems = [];
 let categorias = {};
+let categoriaAtual = 'all';
 
 // Carrega a lista M3U quando a página é carregada
 window.addEventListener('DOMContentLoaded', () => {
@@ -57,6 +68,9 @@ window.addEventListener('DOMContentLoaded', () => {
 // Função para carregar a lista M3U
 async function carregarListaM3U() {
   try {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('categories').innerHTML = '';
+    
     const response = await fetch(M3U_URL);
     if (!response.ok) {
       throw new Error('Erro ao carregar a lista');
@@ -107,8 +121,91 @@ function processarM3U(m3uText) {
     categorias[item.categoria].push(item);
   });
   
+  // Preenche o seletor de categorias
+  preencherSeletorCategorias();
+  
   // Renderiza as categorias
+  filtrarPorCategoria();
+}
+
+// Função para preencher o seletor de categorias
+function preencherSeletorCategorias() {
+  const select = document.getElementById('categoryFilter');
+  // Mantém a opção "Todas as categorias"
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+  
+  // Ordena categorias alfabeticamente
+  const sortedCategories = Object.keys(categorias).sort();
+  
+  for (const cat of sortedCategories) {
+    const option = document.createElement('option');
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
+  }
+}
+
+// Função para filtrar por categoria
+function filtrarPorCategoria() {
+  const select = document.getElementById('categoryFilter');
+  categoriaAtual = select.value;
   renderizarCategorias();
+}
+
+// Função para renderizar categorias
+function renderizarCategorias() {
+  const container = document.getElementById('categories');
+  container.innerHTML = '';
+  
+  if (Object.keys(categorias).length === 0) {
+    container.innerHTML = '<div class="empty">Nenhum canal encontrado</div>';
+    return;
+  }
+  
+  let categoriasParaRenderizar = {};
+  
+  if (categoriaAtual === 'all') {
+    categoriasParaRenderizar = {...categorias};
+  } else if (categorias[categoriaAtual]) {
+    categoriasParaRenderizar[categoriaAtual] = categorias[categoriaAtual];
+  }
+  
+  // Ordena categorias alfabeticamente
+  const sortedCategories = Object.keys(categoriasParaRenderizar).sort();
+  
+  for (const cat of sortedCategories) {
+    const items = categoriasParaRenderizar[cat];
+    
+    const catDiv = document.createElement('div');
+    catDiv.className = 'category';
+    catDiv.innerHTML = `
+      <span class="category-name">${cat}</span>
+      <span class="category-count">${items.length}</span>
+    `;
+    
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'items';
+    itemsDiv.id = `items-${cat.replace(/\s+/g, '-')}`;
+    
+    // Adiciona os itens
+    items.forEach(it => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item';
+      itemDiv.innerHTML = `<a href="${it.url}" target="_blank">${it.nome}</a>`;
+      itemsDiv.appendChild(itemDiv);
+    });
+    
+    // Evento de clique para expandir/recolher
+    catDiv.addEventListener('click', () => {
+      const isVisible = itemsDiv.style.display === 'block';
+      itemsDiv.style.display = isVisible ? 'none' : 'block';
+    });
+    
+    container.appendChild(catDiv);
+    container.appendChild(itemsDiv);
+  }
 }
 
 // Função para parsear a linha EXTINF
@@ -141,93 +238,33 @@ function parseExtInf(line) {
   return result;
 }
 
-// Função para renderizar categorias
-function renderizarCategorias() {
-  const container = document.getElementById('categories');
-  container.innerHTML = '';
-  
-  if (Object.keys(categorias).length === 0) {
-    container.innerHTML = '<div class="empty">Nenhum canal encontrado</div>';
-    return;
-  }
-  
-  // Ordena categorias alfabeticamente
-  const sortedCategories = Object.keys(categorias).sort();
-  
-  for (const cat of sortedCategories) {
-    const items = categorias[cat];
-    
-    const catDiv = document.createElement('div');
-    catDiv.className = 'category';
-    catDiv.innerHTML = `
-      <span class="category-name">${cat}</span>
-      <span class="category-count">${items.length}</span>
-    `;
-    
-    const itemsDiv = document.createElement('div');
-    itemsDiv.className = 'items';
-    itemsDiv.id = `items-${cat.replace(/\s+/g, '-')}`;
-    
-    // Adiciona os itens
-    items.forEach(it => {
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'item';
-      itemDiv.innerHTML = `<a href="${it.url}" target="_blank">${it.nome}</a>`;
-      itemsDiv.appendChild(itemDiv);
-    });
-    
-    // Evento de clique para expandir/recolher
-    catDiv.addEventListener('click', () => {
-      const isVisible = itemsDiv.style.display === 'block';
-      itemsDiv.style.display = isVisible ? 'none' : 'block';
-    });
-    
-    container.appendChild(catDiv);
-    container.appendChild(itemsDiv);
-  }
-}
-
 // Função de pesquisa
 function pesquisar() {
   const query = document.getElementById('search').value.toLowerCase().trim();
   
-  if (query === '') {
-    // Se a pesquisa estiver vazia, mostra todos os itens
-    Object.keys(categorias).forEach(cat => {
-      const itemsDiv = document.getElementById(`items-${cat.replace(/\s+/g, '-')}`);
-      if (itemsDiv) {
-        const items = itemsDiv.getElementsByClassName('item');
-        for (let i = 0; i < items.length; i++) {
-          items[i].style.display = 'block';
-        }
-      }
-    });
-    return;
-  }
+  // Filtra as categorias visíveis com base na pesquisa
+  const categoriasVisiveis = document.querySelectorAll('#categories > .category');
   
-  // Filtra os itens baseado na pesquisa
-  Object.keys(categorias).forEach(cat => {
-    const itemsDiv = document.getElementById(`items-${cat.replace(/\s+/g, '-')}`);
-    if (itemsDiv) {
-      const items = itemsDiv.getElementsByClassName('item');
-      let hasVisibleItems = false;
-      
-      for (let i = 0; i < items.length; i++) {
-        const itemText = items[i].textContent.toLowerCase();
-        if (itemText.includes(query)) {
-          items[i].style.display = 'block';
-          hasVisibleItems = true;
-        } else {
-          items[i].style.display = 'none';
-        }
-      }
-      
-      // Mostra ou esconde a categoria baseado se tem itens visíveis
-      const catDiv = itemsDiv.previousElementSibling;
-      if (catDiv && catDiv.classList.contains('category')) {
-        catDiv.style.display = hasVisibleItems ? 'flex' : 'none';
+  categoriasVisiveis.forEach(catDiv => {
+    const catName = catDiv.querySelector('.category-name').textContent;
+    const itemsDiv = document.getElementById(`items-${catName.replace(/\s+/g, '-')}`);
+    const items = itemsDiv.getElementsByClassName('item');
+    
+    let hasVisibleItems = false;
+    
+    for (let i = 0; i < items.length; i++) {
+      const itemText = items[i].textContent.toLowerCase();
+      if (itemText.includes(query)) {
+        items[i].style.display = 'block';
+        hasVisibleItems = true;
+      } else {
+        items[i].style.display = 'none';
       }
     }
+    
+    // Mostra ou esconde a categoria baseado se tem itens visíveis
+    catDiv.style.display = hasVisibleItems ? 'flex' : 'none';
+    itemsDiv.style.display = hasVisibleItems ? 'block' : 'none';
   });
 }
 </script>
