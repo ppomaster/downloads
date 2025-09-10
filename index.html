@@ -2,173 +2,142 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>IPTV VOD Moderno</title>
+    <title>IPTV VOD Clean</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body {
-            background: linear-gradient(135deg, #092758 50%, #154076 100%);
-            color: #eaf5ff;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            min-height:100vh;
-        }
-        .main-menu {
-            display: flex; flex-direction: column; align-items: center; margin-top: 32px;
-        }
-        .logo-circular {
-            width: 90px; height: 90px; background: #19a8ff; border-radius: 50%; margin-bottom:29px; display:flex; align-items:center; justify-content:center;
-        }
-        .logo-circular img {width:53px;}
-        .circle-menu { display: flex; gap: 7vw; margin-bottom:28px; flex-wrap: wrap; justify-content:center;}
-        .circle-btn { width:80px; height:80px; border-radius:50%; background:#0c4178; border:3px solid #30b2fe; display:flex;flex-direction:column;align-items:center;justify-content:center; color:#eaf5ff; font-size:1.12rem; cursor:pointer; margin:5px;}
-        .circle-btn:hover { background:#198bcd;}
-        .circle-btn .icon {font-size:2.3rem;}
-        .vod-area {
-            max-width:440px; margin:20px auto; padding:18px; background: #121f37cc; border-radius:18px;
-        }
-        .vod-input { width:100%; padding:11px;margin-bottom:15px;border-radius:7px;border:2px solid #30b2fe;font-size:1rem;}
-        .vod-btn { padding:11px 33px;background:#19a8ff;color:#fff;border:none;border-radius:7px;font-size:1.08rem;font-weight:600;cursor:pointer;}
-        .vod-list { margin-top:17px;}
-        .vod-item {background:#183968cc;color:#fff;border-radius:8px;padding:10px 9px;margin-bottom:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;}
-        .vod-title {font-size:1.08rem;cursor:pointer;}
-        .vod-title:hover {color:#4fdcff;text-decoration:underline;}
-        .vod-info { font-size:0.94rem;}
-        .vod-player {margin:20px auto 0 auto;background:#0f233c;border-radius:9px;padding:15px;}
-        .vod-modal {position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0c1c34e0;display:none;align-items:center;justify-content:center; z-index:999;}
-        .vod-modal-content { background:#fff; color:#133b8a; border-radius:14px; max-width:350px; padding:21px 18px 15px 18px; box-shadow:0 4px 20px #0005;}
-        .vod-modal img { max-width:90%; border-radius:9px; margin-bottom:12px;}
-        .vod-modal .vod-close { background:#19a8ff; color:white; border:none; border-radius:6px; padding:7px 19px; margin-top:14px; float:right; font-weight:600; cursor:pointer;}
-        .vod-modal .vod-watch { background:#198b54; color:white; border:none; border-radius:6px; padding:7px 19px; margin-top:14px; float:left; font-weight:600; cursor:pointer;}
-        @media (max-width:600px){
-            .vod-area {padding:5vw;}
-            .circle-btn {width:54px; height:54px; font-size:0.98rem;}
-            .logo-circular {width:54px;height:54px;}
-            .logo-circular img {width:32px;}
-            .vod-modal-content {padding:9vw;font-size:1.07rem;}
-        }
+        body { background: linear-gradient(135deg,#0e375a 60%,#183c67 100%); min-height:100vh; color: #eaf5ff; font-family: Arial,sans-serif; margin:0;}
+        .iptv-area { max-width:480px; margin:38px auto;padding:22px; background:#121f37d8;border-radius:15px; }
+        .iptv-inp    { width:100%;padding:11px 10px;margin-bottom:14px;border-radius:7px;border:2px solid #30b2fe;font-size:1.08rem;}
+        .iptv-btn    { padding:11px 27px;background:#19a8ff;color:#fff;border:none;border-radius:7px;
+            font-size:1.05rem;font-weight:600;cursor:pointer;}
+        .iptv-cat    {margin:15px 0 6px 0;font-size:1.13rem;background:#1e6ecd5a; color:#fff;
+            border:none;border-radius:6px;padding:11px 13px;cursor:pointer;width:100%;text-align:left;}
+        .iptv-list   {margin-bottom:18px;}
+        .iptv-item   {background:#183968cc;border-radius:8px;padding:12px 9px;margin-bottom:10px;font-weight:480;display:flex;align-items:center;justify-content:space-between;}
+        .iptv-name   {font-size:1.07rem;cursor:pointer;color:#fff;}
+        .iptv-name:hover {color:#4fdcff;text-decoration:underline;}
+        .iptv-player {background:#1d324c;padding:19px 5px;margin-top:16px; border-radius:8px;}
+        .iptv-modal {position:fixed;top:0;left:0;width:100vw;height:100vh;background:#111f3485;display:none;align-items:center;justify-content:center;z-index:50;}
+        .iptv-modal-content { background:#fff; color:#153e74; border-radius:13px; max-width:340px; padding:22px 14px; font-size:1.03rem; box-shadow:0 4px 22px #022;}
+        .iptv-modal img { max-width:96%;max-height:160px;border-radius:10px;margin-bottom:10px;}
+        .iptv-modal .iptv-close, .iptv-modal .iptv-watch { padding:7px 16px;border:none;border-radius:6px;margin-top:11px;
+            font-size:1rem;font-weight:600;cursor:pointer;}
+        .iptv-modal .iptv-close { background:#19a8ff;color:#fff;float:right;}
+        .iptv-modal .iptv-watch { background:#198b54;color:#fff;float:left;}
+        @media (max-width:600px){.iptv-area{padding:4vw;}.iptv-cat{font-size:1.01rem;}.iptv-item{font-size:1rem;}}
     </style>
 </head>
 <body>
-<div class="main-menu">
-    <div class="logo-circular">
-        <img src="https://img.icons8.com/color/80/000000/movie-projector.png" alt="Logo" />
+    <div class="iptv-area">
+        <input class="iptv-inp" id="iptvUrlInput" placeholder="Cole o link da sua lista M3U aqui">
+        <button class="iptv-btn" onclick="carregarM3U()">CARREGAR LISTA</button>
+        <div id="iptvCategorias"></div>
+        <div id="iptvTitulos"></div>
+        <div id="iptvPlayer"></div>
     </div>
-    <div class="circle-menu">
-        <div class="circle-btn" onclick="abrirSecao('livetv')"><div class="icon">📺</div><span>LIVE TV</span></div>
-        <div class="circle-btn" onclick="abrirSecao('epg')"><div class="icon">📅</div><span>EPG</span></div>
-        <div class="circle-btn" onclick="abrirSecao('vod')"><div class="icon">🎬</div><span>VOD</span></div>
-        <div class="circle-btn" onclick="abrirSecao('series')"><div class="icon">📂</div><span>SERIES</span></div>
-    </div>
-</div>
-<div id="app"></div>
-
-<!-- Modal para capa, sinopse, elenco, rating -->
-<div class="vod-modal" id="vodModal">
-  <div class="vod-modal-content" id="vodModalContent"></div>
-</div>
-
-<script>
-function abrirSecao(secao) {
-    const app = document.getElementById('app');
-    if(secao!=='vod') {
-        app.innerHTML = `<div class="vod-area" style="text-align:center;font-size:1.14rem;">Seção ${secao.toUpperCase()} em desenvolvimento.</div>`;
-        return;
-    }
-    app.innerHTML = `
-      <div class="vod-area">
-        <input class="vod-input" id="vodUrlInput" placeholder="Cole aqui o link da lista VOD M3U (ex: Filmes)">
-        <button onclick="carregarVOD()" class="vod-btn">CARREGAR</button>
-        <div id="vodList" class="vod-list"></div>
-        <div id="vodPlayer"></div>
-      </div>
-    `;
-}
-function carregarVOD() {
-    const url = document.getElementById('vodUrlInput').value.trim();
-    const vodList = document.getElementById('vodList');
-    vodList.innerHTML = `<div style="color:#38deff;">Carregando lista...</div>`;
-    fetch(url)
-    .then(resp=>resp.text())
-    .then(txt=>{
-        const items=[];
-        let cur=null;
-        txt.split('\n').forEach(l=>{
-            l=l.trim();
-            if(l.startsWith('#EXTINF:')) {
-                cur={nome:l.split(',').pop().trim()};
-            } else if(cur && l && !l.startsWith('#')) {
-                cur.url=l;
-                items.push(cur); cur=null;
-            }
-        });
-        if(!items.length) { vodList.innerHTML='<span style="color:#ef5;">Nenhum item encontrado.</span>'; return;}
-        // Só mostra 20 por vez, mobile-first
-        let pag=0, porPag=20;
-        function renderPag(p) {
-            vodList.innerHTML = items.slice(p*porPag,(p+1)*porPag).map((it,i)=>`
-                <div class='vod-item'>
-                    <span class='vod-title' onclick="mostrarModal('${escapeStr(it.nome)}','${escapeStr(it.url)}')">${it.nome}</span>
-                    <button onclick="tocarStream('${escapeStr(it.url)}','${escapeStr(it.nome)}',this)" style="background:#19a8ff;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-size:1rem;">▶</button>
-                </div>
-            `).join('');
-            if((p+1)*porPag<items.length) 
-                vodList.innerHTML += `<button onclick="(${renderPag}).call(this,${p+1})" style="display:block;margin:16px auto;background:#154076;color:#fff;padding:10px 40px;border:none;border-radius:10px;">CARREGAR MAIS</button>`;
+    <div class="iptv-modal" id="iptvModal"><div class="iptv-modal-content" id="iptvModalContent"></div></div>
+    <script>
+        let M3U_LISTA = [];
+        let M3U_CATEGORIAS = [];
+        function carregarM3U() {
+            document.getElementById("iptvTitulos").innerHTML = '';
+            document.getElementById("iptvPlayer").innerHTML = '';
+            document.getElementById("iptvCategorias").innerHTML = `<div style="color:#2acefc;">Carregando categorias...</div>`;
+            fetch(document.getElementById("iptvUrlInput").value.trim())
+            .then(r=>r.text())
+            .then(txt=>{
+                M3U_LISTA=[]; M3U_CATEGORIAS=[];
+                let cur = null;
+                txt.split('\n').forEach(l=>{
+                    l=l.trim();
+                    if(l.startsWith('#EXTINF:')) {
+                        cur={categoria:'Sem Categoria', nome:l.split(',').pop().trim()};
+                        let catm = l.match(/group-title="([^"]+)"/i);
+                        if (catm) cur.categoria = catm[1];
+                    } else if(cur && l && !l.startsWith('#')) {
+                        cur.url=l; M3U_LISTA.push(cur); cur=null;
+                    }
+                });
+                // Agrupa categorias únicas
+                let catsSet = new Set(M3U_LISTA.map(it=>it.categoria));
+                M3U_CATEGORIAS = Array.from(catsSet).sort();
+                mostrarCategorias();
+            })
+            .catch(()=> document.getElementById("iptvCategorias").innerHTML = `<div style="color:#ff7575;">Falha ao carregar lista.</div>`);
         }
-        renderPag(0);
-    })
-    .catch(()=>{vodList.innerHTML = `<span style="color:#fa5050;">Falha ao carregar/processar.</span>`;});
-}
-function escapeStr(str){
-    return str.replace(/'/g,"").replace(/"/g,"").replace(/\\/g,"");
-}
-function tocarStream(url, nome, btn){
-    // Limpa player anterior
-    let p = document.getElementById('vodPlayer');
-    p.innerHTML = `<div class='vod-player'>
-        <b style="font-size:1.06rem;color:#54bae2;">${nome}</b><br>
-        <video controls autoplay muted style="width:100%;max-height:41vh;background:#000;border-radius:8px;margin-top:8px;">
-            <source src="${url}">
-            Não suportado.
-        </video>
-    </div>`;
-    window.scrollTo(0, p.offsetTop-70);
-}
-
-// MODAL DE INFORMAÇÕES DA OMDb
-function mostrarModal(nome,url){
-    const modal = document.getElementById("vodModal");
-    const modalC = document.getElementById("vodModalContent");
-    modal.style.display = "flex";
-    modalC.innerHTML = `<div style="text-align:center;color:#198bcd;">Buscando informações...</div>`;
-    fetch(`https://www.omdbapi.com/?apikey=6cbfb854&t=${encodeURIComponent(nome)}`)
-        .then(r=>r.json())
-        .then(data=>{
-            if(data && data.Response==="True"){
-                modalC.innerHTML = `
-                    <img src="${data.Poster}" alt="Poster"/>
-                    <div><b>${data.Title}</b> (${data.Year})</div>
-                    <div class="vod-info"><b>IMDb:</b> ${data.imdbRating} &nbsp; <b>Tipo:</b> ${data.Type}</div>
-                    <div class="vod-info"><b>Gênero:</b> ${data.Genre}</div>
-                    <div class="vod-info"><b>Elenco:</b> ${data.Actors}</div>
-                    <div style="margin:10px 0;color:#134072;">${data.Plot}</div>
-                    <button class="vod-watch" onclick="tocarStream('${url}','${nome}',this);document.getElementById('vodModal').style.display='none';">ASSISTIR</button>
-                    <button class="vod-close" onclick="document.getElementById('vodModal').style.display='none';">FECHAR</button>
+        function mostrarCategorias() {
+            let html = "<b style='color:#adf;font-size:1.07rem;'>Categorias:</b>";
+            M3U_CATEGORIAS.forEach(cat=>{
+                html+=`<button class='iptv-cat' onclick="mostrarTitulos('${escapeStr(cat)}')">${cat}</button>`;
+            });
+            document.getElementById("iptvCategorias").innerHTML=html;
+            document.getElementById("iptvTitulos").innerHTML='';
+            document.getElementById("iptvPlayer").innerHTML='';
+        }
+        function mostrarTitulos(cat) {
+            const lista = M3U_LISTA.filter(it=>it.categoria===cat);
+            if (!lista.length){document.getElementById("iptvTitulos").innerHTML="<div style='color:#ec7;'>Sem títulos nesta categoria.</div>"; return;}
+            let html = "<div class='iptv-list'>";
+            lista.forEach(it=>{
+                html+=`
+                <div class='iptv-item'>
+                    <span class='iptv-name' onclick="modalInfo('${escapeStr(it.nome)}','${escapeStr(it.url)}')">${it.nome}</span>
+                    <button onclick="tocarStream('${escapeStr(it.url)}','${escapeStr(it.nome)}',this)"
+                        style="background:#19a8ff;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:1.07rem;">▶</button>
+                </div>
                 `;
-            } else {
-                modalC.innerHTML = `<div><b>${nome}</b></div>
-                    <div style="color:#135fae;margin:11px 0;">Sem informações detalhadas na OMDb</div>
-                    <button class="vod-watch" onclick="tocarStream('${url}','${nome}',this);document.getElementById('vodModal').style.display='none';">ASSISTIR</button>
-                    <button class="vod-close" onclick="document.getElementById('vodModal').style.display='none';">FECHAR</button>`;
-            }
-        })
-        .catch(()=>{
-            modalC.innerHTML = `<div style="color:#fa5050;"><b>${nome}</b><br>Erro ao buscar informações.</div>
-            <button class="vod-close" onclick="document.getElementById('vodModal').style.display='none';">FECHAR</button>`;
-        });
-}
-// Fecha modal no clique fora
-document.getElementById("vodModal").onclick = function(e){
-    if(e.target===this){this.style.display='none';}
-};
-</script>
+            });
+            html+="</div>";
+            document.getElementById("iptvTitulos").innerHTML=html;
+            document.getElementById("iptvPlayer").innerHTML='';
+        }
+        function escapeStr(str){ return (str||"").replace(/'/g,"").replace(/"/g,"").replace(/\\/g,""); }
+
+        function tocarStream(url, nome, btn) {
+            document.getElementById("iptvPlayer").innerHTML = `
+                <div class='iptv-player'><b style="color:#54bae2;">${nome||""}</b><br>
+                <video controls autoplay muted style="width:98%;max-height:40vh;background:#000;border-radius:8px;margin-top:8px;">
+                    <source src="${url}">
+                    Não suportado.
+                </video></div>`;
+            window.scrollTo(0,document.getElementById("iptvPlayer").offsetTop-60);
+        }
+        // MODAL OMDb
+        function modalInfo(nome,url){
+            const modal = document.getElementById("iptvModal");
+            const modalC = document.getElementById("iptvModalContent");
+            modal.style.display="flex";
+            modalC.innerHTML="<div style='color:#18b7fe;'>Buscando informações...</div>";
+            fetch("https://www.omdbapi.com/?apikey=6cbfb854&t="+encodeURIComponent(nome))
+                .then(r=>r.json())
+                .then(data=>{
+                    if(data && data.Response==="True"){
+                        modalC.innerHTML = `
+                            <img src="${data.Poster}" alt="Poster"/>
+                            <div><b>${data.Title||nome}</b> (${data.Year||""})</div>
+                            <div><b>IMDb:</b> ${data.imdbRating||""} &nbsp; <b>Tipo:</b> ${data.Type||""}</div>
+                            <div><b>Gênero:</b> ${data.Genre||""}</div>
+                            <div><b>Elenco:</b> ${data.Actors||""}</div>
+                            <div style="margin:10px 0;color:#134072;">${data.Plot||""}</div>
+                            <button class="iptv-watch" onclick="tocarStream('${url}','${nome}',
+                            this);document.getElementById('iptvModal').style.display='none';">ASSISTIR</button>
+                            <button class="iptv-close" onclick="document.getElementById('iptvModal').style.display='none';">FECHAR</button>
+                        `;
+                    }else{
+                        modalC.innerHTML = `<b>${nome}</b><br>
+                        <div style="color:#195ea3;margin:11px 0;">Sem informações OMDb</div>
+                        <button class="iptv-watch" onclick="tocarStream('${url}','${nome}', this);document.getElementById('iptvModal').style.display='none';">ASSISTIR</button>
+                        <button class="iptv-close" onclick="document.getElementById('iptvModal').style.display='none';">FECHAR</button>`;
+                    }
+                })
+                .catch(()=>{
+                    modalC.innerHTML = `<b>${nome}</b><br>
+                        <div style="color:#e44;">Erro ao buscar informações.</div>
+                        <button class="iptv-close" onclick="document.getElementById('iptvModal').style.display='none';">FECHAR</button>`;
+                });
+        }
+        // Fecha modal ao clicar fora
+        document.getElementById("iptvModal").onclick = function(e){ if(e.target===this){this.style.display='none';}};
+    </script>
 </body>
 </html>
