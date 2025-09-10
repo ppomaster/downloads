@@ -2,185 +2,173 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>TV M3U Mini IPTV</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IPTV VOD Moderno</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            background: linear-gradient(135deg, #092758 50%, #154076 100%);
+            color: #eaf5ff;
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #0a174e 40%, #133b8a 100%);
-            min-height: 100vh;
-            color: #fff;
+            min-height:100vh;
         }
         .main-menu {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 44px;
+            display: flex; flex-direction: column; align-items: center; margin-top: 32px;
         }
         .logo-circular {
-            width: 86px; height: 86px; border-radius: 50%; 
-            background: #207bee;
-            margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center;
+            width: 90px; height: 90px; background: #19a8ff; border-radius: 50%; margin-bottom:29px; display:flex; align-items:center; justify-content:center;
         }
-        .logo-circular img {
-            width: 54px; height: 54px;
+        .logo-circular img {width:53px;}
+        .circle-menu { display: flex; gap: 7vw; margin-bottom:28px; flex-wrap: wrap; justify-content:center;}
+        .circle-btn { width:80px; height:80px; border-radius:50%; background:#0c4178; border:3px solid #30b2fe; display:flex;flex-direction:column;align-items:center;justify-content:center; color:#eaf5ff; font-size:1.12rem; cursor:pointer; margin:5px;}
+        .circle-btn:hover { background:#198bcd;}
+        .circle-btn .icon {font-size:2.3rem;}
+        .vod-area {
+            max-width:440px; margin:20px auto; padding:18px; background: #121f37cc; border-radius:18px;
         }
-        .circle-menu {
-            display: flex;
-            gap: 8vw;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 25px; margin-bottom: 38px;
-        }
-        .circle-btn {
-            width: 82px; height: 82px;
-            background: rgba(255,255,255,0.13);
-            border: 4px solid #1082cd;
-            border-radius: 50%;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            cursor: pointer;
-            margin: 5px 8px;
-            box-shadow: 0 2px 14px #0b213b27;
-            transition: 0.19s;
-        }
-        .circle-btn:active, .circle-btn:hover {
-            background: #21b2fd33;
-            border-color: #14e0fc;
-            transform: scale(1.07);
-        }
-        .circle-btn .icon {
-            font-size: 2.2rem;
-            margin-bottom: 7px;
-        }
-        .circle-btn span {
-            font-size: 1.05rem;
-            font-weight: 500;
-            color: #e8fcff;
-            margin-top: 3px;
-        }
-        .footer-iptv {
-            position: fixed;
-            left:0; right:0; bottom:0; padding: 13px 0 8px 0;
-            background: #151e45c0;
-            color: #95bfff;
-            text-align: center;
-            font-size: 0.99rem;
-            letter-spacing: 0.01em;
-        }
-        /* Mobile responsive */
-        @media (max-width: 600px) {
-            .circle-menu { gap: 4vw;}
-            .circle-btn { width:60px;height:60px;}
-            .circle-btn .icon { font-size:1.36rem;}
-            .logo-circular { width:56px; height:56px;}
-            .logo-circular img { width:32px; height:32px;}
+        .vod-input { width:100%; padding:11px;margin-bottom:15px;border-radius:7px;border:2px solid #30b2fe;font-size:1rem;}
+        .vod-btn { padding:11px 33px;background:#19a8ff;color:#fff;border:none;border-radius:7px;font-size:1.08rem;font-weight:600;cursor:pointer;}
+        .vod-list { margin-top:17px;}
+        .vod-item {background:#183968cc;color:#fff;border-radius:8px;padding:10px 9px;margin-bottom:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between;}
+        .vod-title {font-size:1.08rem;cursor:pointer;}
+        .vod-title:hover {color:#4fdcff;text-decoration:underline;}
+        .vod-info { font-size:0.94rem;}
+        .vod-player {margin:20px auto 0 auto;background:#0f233c;border-radius:9px;padding:15px;}
+        .vod-modal {position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0c1c34e0;display:none;align-items:center;justify-content:center; z-index:999;}
+        .vod-modal-content { background:#fff; color:#133b8a; border-radius:14px; max-width:350px; padding:21px 18px 15px 18px; box-shadow:0 4px 20px #0005;}
+        .vod-modal img { max-width:90%; border-radius:9px; margin-bottom:12px;}
+        .vod-modal .vod-close { background:#19a8ff; color:white; border:none; border-radius:6px; padding:7px 19px; margin-top:14px; float:right; font-weight:600; cursor:pointer;}
+        .vod-modal .vod-watch { background:#198b54; color:white; border:none; border-radius:6px; padding:7px 19px; margin-top:14px; float:left; font-weight:600; cursor:pointer;}
+        @media (max-width:600px){
+            .vod-area {padding:5vw;}
+            .circle-btn {width:54px; height:54px; font-size:0.98rem;}
+            .logo-circular {width:54px;height:54px;}
+            .logo-circular img {width:32px;}
+            .vod-modal-content {padding:9vw;font-size:1.07rem;}
         }
     </style>
 </head>
 <body>
-    <div class="main-menu">
-        <div class="logo-circular">
-            <img src="https://img.icons8.com/color/80/000000/movie-projector.png" alt="Logo" />
-        </div>
-        <div class="circle-menu">
-            <div class="circle-btn" onclick="abrirSecao('livetv')">
-                <div class="icon">📺</div>
-                <span>LIVE TV</span>
-            </div>
-            <div class="circle-btn" onclick="abrirSecao('epg')">
-                <div class="icon">📅</div>
-                <span>EPG</span>
-            </div>
-            <div class="circle-btn" onclick="abrirSecao('vod')">
-                <div class="icon">🎬</div>
-                <span>VOD</span>
-            </div>
-            <div class="circle-btn" onclick="abrirSecao('series')">
-                <div class="icon">📂</div>
-                <span>SERIES</span>
-            </div>
-        </div>
-        <div id="app"></div>
+<div class="main-menu">
+    <div class="logo-circular">
+        <img src="https://img.icons8.com/color/80/000000/movie-projector.png" alt="Logo" />
     </div>
-    <div class="footer-iptv">
-        &#x1F4FA; App IPTV demo leve &bull; Funciona até em 1GB RAM &bull; Feito para você!
+    <div class="circle-menu">
+        <div class="circle-btn" onclick="abrirSecao('livetv')"><div class="icon">📺</div><span>LIVE TV</span></div>
+        <div class="circle-btn" onclick="abrirSecao('epg')"><div class="icon">📅</div><span>EPG</span></div>
+        <div class="circle-btn" onclick="abrirSecao('vod')"><div class="icon">🎬</div><span>VOD</span></div>
+        <div class="circle-btn" onclick="abrirSecao('series')"><div class="icon">📂</div><span>SERIES</span></div>
     </div>
-    <script>
-        function abrirSecao(secao) {
-            const app = document.getElementById('app');
-            app.innerHTML = '<div style="margin:40px 0;text-align:center;color:#73d6fd;">Carregando '+secao.toUpperCase()+'...</div>';
-            // Aqui começa o lazy load para cada seção:
-            // O código detalhado de cada bloco (exibir categoria, buscar lista, paginar, abrir modal detalhes)
-            // será carregado ou montado sob demanda quando o usuário clicar!
-            // Exemplo:
-            setTimeout(() => {
-                app.innerHTML = `<div style="max-width:450px;margin:0 auto;">
-                    <input style="width:100%;padding:12px 8px;border-radius:8px;border:1px solid #128bdf;margin-bottom:13px;" 
-                        placeholder="Cole aqui o link da lista M3U..." id="iptvlink${secao}" />
-                    <button onclick="carregarLista('${secao}')" style="padding:10px 35px;background:#207bee;color:#fff;
-                    border:none; border-radius:5px;font-size:1rem;font-weight:600;cursor:pointer;">CARREGAR</button>
-                    <div id="listagem-${secao}" style="margin-top:20px;"></div>
-                </div>`;
-            }, 500);
-        }
+</div>
+<div id="app"></div>
 
-        function carregarLista(secao) {
-            const url = document.getElementById("iptvlink"+secao).value.trim();
-            const saida = document.getElementById("listagem-"+secao);
-            if (!url) { saida.innerHTML = '<div style="color:#ed5555;">Digite uma URL válida.</div>'; return;}
-            saida.innerHTML = '<div style="color:#28d0ff;">Baixando lista...</div>';
-            fetch(url)
-                .then(resp=>resp.text())
-                .then(texto=>{
-                    // Aqui você pode: 1) Processar o M3U para pegar só categorias e nomes (não processar tudo!), 2) Mostrar só as primeiras 15 entradas
-                    const items = [];
-                    let cur = null;
-                    texto.split('\n').forEach(l=>{
-                        l=l.trim();
-                        if(l.startsWith('#EXTINF:')) {
-                            cur={nome:l.split(',').pop().trim()}; 
-                        } else if(cur && l && !l.startsWith('#')) {
-                            cur.url=l; 
-                            items.push(cur);
-                            cur=null;
-                        }
-                    });
-                    // Paginação (leve)
-                    let pagina=0, porPag=15;
-                    function renderPag(pag) {
-                        saida.innerHTML = items.slice(pag*porPag,(pag+1)*porPag).map((it,i)=>
-                            `<div style='background:#fff1;padding:8px 6px;margin:8px 0;
-                            border-radius:6px;color:#124;'>${it.nome}
-                                <button onclick="tocarStream('${it.url.replace(/'/g,"")}', '${it.nome.replace(/'/g,"")}', this)" 
-                                style="float:right;padding:3px 13px;background:#128bdf;color:#fff;border:none;border-radius:4px">▶︎</button>
-                            </div>`).join('');
-                        if((pag+1)*porPag<items.length) 
-                            saida.innerHTML+='<div style="text-align:center;"><button onclick="('+renderPag+').call(this,'+(pag+1)+')" style="margin-top:9px;background:#1761d6;color:#fff;padding:7px 30px;border:none;border-radius:7px;">MAIS</button></div>';
-                    }
-                    renderPag(0);
-                })
-                .catch(()=>{saida.innerHTML='<span style="color:#d23;">Falha ao baixar/processar lista.</span>';});
-        }
+<!-- Modal para capa, sinopse, elenco, rating -->
+<div class="vod-modal" id="vodModal">
+  <div class="vod-modal-content" id="vodModalContent"></div>
+</div>
 
-        function tocarStream(url, nome, btn) {
-            // Monta player leve na tela, removendo anterior
-            let p = document.getElementById('player-iptv-app');
-            if (p) p.remove();
-            let src = url.startsWith('http') ? url : '';
-            const tag = document.createElement('div');
-            tag.id = 'player-iptv-app';
-            tag.innerHTML = `<div style="background:#06193B;padding:14px;border-radius:8px;margin:17px 0;">
-                    <b style="color:#80c6fa;">${nome}</b><br>
-                    <video controls autoplay style="width:97%;background:#000;border-radius:8px;margin-top:8px;max-height:38vh;">
-                        <source src="${src}">
-                        Não suportado.
-                    </video>
-                </div>`;
-            btn.parentNode.parentNode.appendChild(tag);
+<script>
+function abrirSecao(secao) {
+    const app = document.getElementById('app');
+    if(secao!=='vod') {
+        app.innerHTML = `<div class="vod-area" style="text-align:center;font-size:1.14rem;">Seção ${secao.toUpperCase()} em desenvolvimento.</div>`;
+        return;
+    }
+    app.innerHTML = `
+      <div class="vod-area">
+        <input class="vod-input" id="vodUrlInput" placeholder="Cole aqui o link da lista VOD M3U (ex: Filmes)">
+        <button onclick="carregarVOD()" class="vod-btn">CARREGAR</button>
+        <div id="vodList" class="vod-list"></div>
+        <div id="vodPlayer"></div>
+      </div>
+    `;
+}
+function carregarVOD() {
+    const url = document.getElementById('vodUrlInput').value.trim();
+    const vodList = document.getElementById('vodList');
+    vodList.innerHTML = `<div style="color:#38deff;">Carregando lista...</div>`;
+    fetch(url)
+    .then(resp=>resp.text())
+    .then(txt=>{
+        const items=[];
+        let cur=null;
+        txt.split('\n').forEach(l=>{
+            l=l.trim();
+            if(l.startsWith('#EXTINF:')) {
+                cur={nome:l.split(',').pop().trim()};
+            } else if(cur && l && !l.startsWith('#')) {
+                cur.url=l;
+                items.push(cur); cur=null;
+            }
+        });
+        if(!items.length) { vodList.innerHTML='<span style="color:#ef5;">Nenhum item encontrado.</span>'; return;}
+        // Só mostra 20 por vez, mobile-first
+        let pag=0, porPag=20;
+        function renderPag(p) {
+            vodList.innerHTML = items.slice(p*porPag,(p+1)*porPag).map((it,i)=>`
+                <div class='vod-item'>
+                    <span class='vod-title' onclick="mostrarModal('${escapeStr(it.nome)}','${escapeStr(it.url)}')">${it.nome}</span>
+                    <button onclick="tocarStream('${escapeStr(it.url)}','${escapeStr(it.nome)}',this)" style="background:#19a8ff;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-size:1rem;">▶</button>
+                </div>
+            `).join('');
+            if((p+1)*porPag<items.length) 
+                vodList.innerHTML += `<button onclick="(${renderPag}).call(this,${p+1})" style="display:block;margin:16px auto;background:#154076;color:#fff;padding:10px 40px;border:none;border-radius:10px;">CARREGAR MAIS</button>`;
         }
-    </script>
+        renderPag(0);
+    })
+    .catch(()=>{vodList.innerHTML = `<span style="color:#fa5050;">Falha ao carregar/processar.</span>`;});
+}
+function escapeStr(str){
+    return str.replace(/'/g,"").replace(/"/g,"").replace(/\\/g,"");
+}
+function tocarStream(url, nome, btn){
+    // Limpa player anterior
+    let p = document.getElementById('vodPlayer');
+    p.innerHTML = `<div class='vod-player'>
+        <b style="font-size:1.06rem;color:#54bae2;">${nome}</b><br>
+        <video controls autoplay muted style="width:100%;max-height:41vh;background:#000;border-radius:8px;margin-top:8px;">
+            <source src="${url}">
+            Não suportado.
+        </video>
+    </div>`;
+    window.scrollTo(0, p.offsetTop-70);
+}
+
+// MODAL DE INFORMAÇÕES DA OMDb
+function mostrarModal(nome,url){
+    const modal = document.getElementById("vodModal");
+    const modalC = document.getElementById("vodModalContent");
+    modal.style.display = "flex";
+    modalC.innerHTML = `<div style="text-align:center;color:#198bcd;">Buscando informações...</div>`;
+    fetch(`https://www.omdbapi.com/?apikey=6cbfb854&t=${encodeURIComponent(nome)}`)
+        .then(r=>r.json())
+        .then(data=>{
+            if(data && data.Response==="True"){
+                modalC.innerHTML = `
+                    <img src="${data.Poster}" alt="Poster"/>
+                    <div><b>${data.Title}</b> (${data.Year})</div>
+                    <div class="vod-info"><b>IMDb:</b> ${data.imdbRating} &nbsp; <b>Tipo:</b> ${data.Type}</div>
+                    <div class="vod-info"><b>Gênero:</b> ${data.Genre}</div>
+                    <div class="vod-info"><b>Elenco:</b> ${data.Actors}</div>
+                    <div style="margin:10px 0;color:#134072;">${data.Plot}</div>
+                    <button class="vod-watch" onclick="tocarStream('${url}','${nome}',this);document.getElementById('vodModal').style.display='none';">ASSISTIR</button>
+                    <button class="vod-close" onclick="document.getElementById('vodModal').style.display='none';">FECHAR</button>
+                `;
+            } else {
+                modalC.innerHTML = `<div><b>${nome}</b></div>
+                    <div style="color:#135fae;margin:11px 0;">Sem informações detalhadas na OMDb</div>
+                    <button class="vod-watch" onclick="tocarStream('${url}','${nome}',this);document.getElementById('vodModal').style.display='none';">ASSISTIR</button>
+                    <button class="vod-close" onclick="document.getElementById('vodModal').style.display='none';">FECHAR</button>`;
+            }
+        })
+        .catch(()=>{
+            modalC.innerHTML = `<div style="color:#fa5050;"><b>${nome}</b><br>Erro ao buscar informações.</div>
+            <button class="vod-close" onclick="document.getElementById('vodModal').style.display='none';">FECHAR</button>`;
+        });
+}
+// Fecha modal no clique fora
+document.getElementById("vodModal").onclick = function(e){
+    if(e.target===this){this.style.display='none';}
+};
+</script>
 </body>
 </html>
