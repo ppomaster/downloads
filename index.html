@@ -1,448 +1,532 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TV M3U Lite - VOD Profissional</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #0a174e 30%, #133b8a 100%);
-    min-height: 100vh;
-    color: #fff;
-    margin: 0; padding: 0;
-  }
-  header {
-    margin-top: 30px;
-    text-align: center;
-  }
-  .logo {
-    width: 70px; height: 70px;
-    margin: 0 auto 25px auto;
-    border-radius: 50%;
-    background: #1f547c;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .logo::after {
-    content: '';
-    display: block;
-    background: url('https://img.icons8.com/color/80/000000/movie-projector.png') no-repeat center center;
-    background-size: 38px 38px;
-    width: 38px; height: 38px;
-  }
-  .nav-circles {
-    display: flex;
-    justify-content: center;
-    gap: 46px;
-    margin-bottom: 32px;
-  }
-  .circle-btn {
-    width: 86px; height: 86px;
-    background: rgba(255,255,255,0.10);
-    border: 4px solid #0b2c65;
-    border-radius: 50%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: background 0.22s, transform 0.22s;
-    box-shadow: 0 2px 14px rgba(0,0,0,0.2);
-  }
-  .circle-btn.selected, .circle-btn:hover {
-    background: rgba(40,180,220,0.27);
-    transform: scale(1.07);
-    border-color: #29a8ff;
-  }
-  .circle-btn .icon {
-    font-size: 1.7rem;
-    margin-bottom: 6px;
-  }
-  .circle-btn span {
-    font-size: 0.93rem; margin-top: 3px; color: #cfe1fc;
-    letter-spacing: .01em;
-    font-weight: 500;
-  }
-  .controls-bar {
-    margin: 26px auto 10px auto;
-    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    max-width: 750px;
-  }
-  .load-input, .search-input, .category-select {
-    background: #fff; color: #0c244b; border: none; border-radius: 5px;
-    padding: 8px 10px; font-size: 1rem; margin: 0 2px;
-  }
-  .action-btn {
-    background: #226ccb; color: #fff; border: none; border-radius: 5px;
-    font-size: 1rem; padding: 9px 22px; font-weight: bold; cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,.10);
-    transition: background .25s;
-  }
-  .action-btn:hover { background: #1858a2; }
-  .vod-container {
-    margin: 24px auto; max-width: 1200px;
-  }
-  .categories {
-    display: flex; flex-direction: column; gap: 36px;
-  }
-  .category {
-    background: rgba(0,14,64,.08);
-    border-radius: 12px; padding: 15px 5px 5px 15px;
-    box-shadow: 0 2px 7px rgba(18,26,64,0.13);
-  }
-  .category-header {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 1.16rem; font-weight: 600; color: #20c1fd; margin-bottom: 10px;
-  }
-  .download-all-btn {
-    background: #2e7d32;
-    color: #fff; border: none; border-radius: 5px; padding: 5px 17px;
-    font-size: .95rem; cursor: pointer; transition: background .22s;
-  }
-  .download-all-btn:hover { background: #216a27; }
-  .items {
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(210px,1fr));
-    gap: 24px;
-  }
-  .item-card {
-    background: #fff;
-    color: #14192d;
-    border-radius: 8px;
-    display: flex; flex-direction: column;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.09);
-    overflow: hidden;
-    transition: transform 0.18s;
-    min-height: 385px;
-    position: relative;
-  }
-  .item-img {
-    width: 100%; height: 170px; object-fit: cover;
-    background: #ececec;
-  }
-  .item-content {
-    padding: 15px 16px 13px 16px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-  .item-title {
-    font-size: 1.08rem; font-weight: 600; margin-bottom: 9px; min-height: 36px; color: #1a315b;
-  }
-  .item-plot {
-    font-size: 0.97rem;
-    min-height: 54px; margin-bottom: 10px; color: #11517e;
-  }
-  .item-meta {
-    font-size: 0.88rem; color: #3178a5; margin-bottom: 9px;
-  }
-  .item-buttons {
-    display: flex; gap: 10px; align-items: center; margin-top: auto;
-  }
-  .btn-watch, .btn-download {
-    flex: 1; padding: 7px 12px;
-    border: none; border-radius: 6px;
-    font-weight: 600; cursor: pointer;
-    transition: background-color 0.2s;
-    color: #fff; text-align: center; text-decoration: none; display:inline-block;
-    font-size: 1rem;
-  }
-  .btn-watch { background-color: #248bed;}
-  .btn-watch:hover { background-color: #144d78; }
-  .btn-download { background-color: #2e7d32; }
-  .btn-download:hover { background-color: #174f23; }
-  .loading, .error {
-    text-align: center; font-size: 1.1rem;
-    color: #52beef; padding: 28px 10px;
-  }
-  .error { color: #f76767;}
-  @media (max-width: 700px) {
-    .nav-circles { gap: 13vw; }
-    .items { grid-template-columns: 1fr; }
-    .category { padding: 6px 3vw 8px 3vw;}
-  }
-</style>
+    <title>Streaming App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        /* Custom CSS to adjust layout */
+        #playlist {
+            background-color: #f8f9fa;
+            padding: 15px;
+            max-height: 100vh; /* Set a maximum height equal to the viewport height */
+            overflow-y: auto; /* Add a vertical scrollbar when needed */
+        }
+
+        #videoPlayer {
+            width: 100%;
+            height: auto;
+        }
+
+        .input-group-btn {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-go {
+            margin-left: 10px;
+        }
+
+        .tv-logo {
+            width: 100px;
+        }
+
+        /* Apply subtle glow effect on hover */
+        .channel:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        /* Change cursor to pointer on hover */
+        .channel:hover {
+            cursor: pointer;
+        }
+
+        /* CSS for the billed message */
+        .billed-msg {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        /* Search bar styles */
+        .search-bar {
+            margin-bottom: 10px;
+        }
+
+        #recentPlayedList {
+            background-color:rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 15px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            max-width: 100vh; /* Set a maximum height equal to the viewport height */
+            overflow-x: auto; /* Add a vertical scrollbar when needed */
+        }
+    </style>
 </head>
 <body>
-<header>
-  <div class="logo"></div>
-  <nav class="nav-circles">
-    <div class="circle-btn selected">
-      <div class="icon">📺</div>
-      <span>LIVE TV</span>
+    <div class="container-fluid h-100">
+        <div class="row d-flex justify-content-center h-100">
+            <div class="col-md-10 order-md-2">
+                <div class="row">
+                    <div class="col-12 order-2 order-md-1">
+                        <div class="input-group mb-3 mt-3">
+                            <input type="text" id="m3uURL" class="form-control" placeholder="Enter M3U URL">
+                            <div class="input-group-btn">
+                                <button id="loadM3U" class="btn btn-primary btn-go">Go</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 order-1 order-md-2">
+                        <video id="videoPlayer" controls autoplay muted class="d-none"></video>
+                    </div>
+
+                    <div class="col-12 order-3 mt-3" id="recentPlayedSection">
+                        <div>Continue Watching</div>
+                        <div id="recentPlayedList" class="d-flex"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 order-md-1" id="playlist">
+                <input type="text" id="searchInput" class="form-control search-bar" placeholder="Search Channel">
+                <div class="d-flex align-items-center text-secondary mt-4" id="channel-placeholder">No channel found</div>
+                <div id="playlistItemsContainer" class="d-flex flex-md-column flex-wrap flex-md-nowrap">
+                    <!-- Playlist items will be added here -->
+                </div>
+           </div>
+        </div>
     </div>
-    <div class="circle-btn"><div class="icon">📅</div><span>EPG</span></div>
-    <div class="circle-btn"><div class="icon">🎬</div><span>VOD</span></div>
-    <div class="circle-btn"><div class="icon">📂</div><span>SERIES</span></div>
-  </nav>
-</header>
-<main>
-  <div class="controls-bar">
-    <input class="load-input" type="text" id="m3uUrl" placeholder="Cole ou digite o link da lista M3U" size="50"/>
-    <button class="action-btn" onclick="carregarLista()">Carregar Lista</button>
-    <input type="text" id="searchInput" placeholder="Pesquisar título..." class="search-input" />
-    <button class="search-btn action-btn" onclick="pesquisar()">Buscar</button>
-    <select id="categoryFilter" class="category-select" onchange="filtrarPorCategoria()"><option value="all">Todas categorias</option></select>
-  </div>
-  <div class="vod-container">
-    <div id="loading" class="loading" style="display:none;">Carregando lista...</div>
-    <div id="categories" class="categories"></div>
-  </div>
-</main>
-<script>
-const APIKEY_OMDB = '6cbfb854';
-const ITEMS_PER_PAGE = 10;
-let allItems = [], categorias = {}, categoriaAtual = 'all';
+    <div id="billedMsg" class="billed-msg d-none"></div>
 
-function carregarLista() {
-  const urlInput = document.getElementById('m3uUrl').value.trim();
-  if (!urlInput) { alert('Cole o link da lista M3U.'); return; }
-  mostrarLoading();
-  fetch(urlInput)
-    .then(resp => {
-      if (!resp.ok) throw new Error(`Erro ao carregar: ${resp.status} ${resp.statusText}`);
-      return resp.text();
-    })
-    .then(text => processarM3U(text))
-    .catch(erro => mostrarErro(erro.message));
-}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.0/shaka-player.compiled.js"></script>
+    <script>
+        // Define an array to store all playlist items
+        let playlistItems = [];
+        let player = null;
+        let recentPlayed = [];
 
-function processarM3U(text) {
-  allItems = [];
-  categorias = {};
-  let lines = text.split('\n'), currentItem = null, pendingFetch = [];
-  for (let line of lines) {
-    line = line.trim();
-    if (line.startsWith('#EXTINF:')) { currentItem = parseExtInf(line); }
-    else if (currentItem && line && !line.startsWith('#') && (line.startsWith('http') || line.startsWith('https'))) {
-      currentItem.url = line;
-      if (!categorias[currentItem.categoria]) categorias[currentItem.categoria] = [];
-      categorias[currentItem.categoria].push(currentItem);
-      allItems.push(currentItem);
-      pendingFetch.push(adicionarMetaOMDb(currentItem));
-      currentItem = null;
-    }
-  }
-  Promise.all(pendingFetch).then(() => {
-    preencherFiltroCategorias();
-    filtrarPorCategoria();
-    ocultarLoading();
-  });
-}
+        document.addEventListener("DOMContentLoaded", function() {
+            const videoPlayer = document.getElementById("videoPlayer");
+            const playlist = document.getElementById("playlist");
+            const playlistItemsContainer = document.getElementById("playlistItemsContainer");
+            const loadM3UButton = document.getElementById("loadM3U");
+            const m3uURLInput = document.getElementById("m3uURL");
+            const billedMsgElement = document.getElementById("billedMsg");
+            const searchInput = document.getElementById("searchInput");
+            const channelPlaceholder = document.getElementById("channel-placeholder");
+            const recentPlayedSection = document.getElementById("recentPlayedSection");
+            const recentPlayedList = document.getElementById("recentPlayedList");
 
-// Busca dados no OMDb
-function adicionarMetaOMDb(item) {
-  // Para VOD deve ser filme, então tentamos buscar primeiro pelo nome
-  return fetch(`https://www.omdbapi.com/?apikey=${APIKEY_OMDB}&t=${encodeURIComponent(item.nome)}`)
-    .then(r => r.json())
-    .then(info => {
-      if (info.Response === "True") {
-        if (info.Poster && info.Poster.startsWith("http")) item.capa = info.Poster;
-        item.sinopse = info.Plot || "";
-        item.ano = info.Year || "";
-        item.genero = info.Genre || "";
-        item.atores = info.Actors || "";
-        item.nota = info.imdbRating || "";
-      } else {
-        item.sinopse = "";
-        item.ano = "";
-        item.capa = item.capa || "";
-        item.genero = "";
-        item.atores = "";
-        item.nota = "";
-      }
-    }).catch(()=>{});
-}
+            //  Get playlist url from url if any
+            var urlParams = new URLSearchParams(window.location.search);
+            var playlistParam = urlParams.get('playlist');
+            if (playlistParam != null) {
+                localStorage.setItem("m3uPlaylistURL", playlistParam);
+            }
 
-function parseExtInf(line) {
-  let item = { categoria: 'VOD', nome: '', url: '', capa: '', sinopse: '', ano: '' };
-  let gtStart = line.indexOf('group-title="');
-  if (gtStart !== -1) {
-    let gtEnd = line.indexOf('"', gtStart + 13);
-    if (gtEnd !== -1) item.categoria = line.substring(gtStart + 13, gtEnd);
-  }
-  let logoStart = line.indexOf('tvg-logo="');
-  if (logoStart !== -1) {
-    let logoEnd = line.indexOf('"', logoStart + 9);
-    if (logoEnd !== -1) item.capa = line.substring(logoStart + 9, logoEnd);
-  }
-  let lastComma = line.lastIndexOf(',');
-  if (lastComma !== -1) item.nome = line.substring(lastComma + 1).trim();
-  return item;
-}
+            // Load search input from local storage
+            const savedPlaylistURL = localStorage.getItem("m3uPlaylistURL");
+            if (savedPlaylistURL) {
+                m3uURLInput.value = savedPlaylistURL;
+                // Automatically load the saved playlist
+                setTimeout(function() {
+                    loadM3UButton.click();
+                }, 500);
+            }
 
-function preencherFiltroCategorias() {
-  let select = document.getElementById('categoryFilter');
-  while (select.options.length > 1) select.remove(1);
-  Object.keys(categorias).sort().forEach(cat => {
-    let option = document.createElement('option');
-    option.value = cat;
-    option.textContent = cat;
-    select.appendChild(option);
-  });
-}
+            // Load recent played
+            loadRecentPlayed();
 
-function filtrarPorCategoria() {
-  categoriaAtual = document.getElementById('categoryFilter').value;
-  renderizarCategorias();
-}
+            loadM3UButton.addEventListener("click", () => {
+                const m3uURL = m3uURLInput.value;
+                localStorage.setItem("m3uPlaylistURL", m3uURL);
 
-function renderizarCategorias() {
-  let container = document.getElementById('categories');
-  container.innerHTML = '';
-  let cats = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
+                // Load and parse the M3U file from the user-provided URL
+                fetch(m3uURL)
+                    .then(response => response.text())
+                    .then(data => {
+                        videoPlayer.innerHTML = ''; // Clear the video player
+                        clearPlaylist(); // clear channel list
 
-  cats.forEach(cat => {
-    let items = categorias[cat];
-    if (!items || items.length === 0) return;
+                        const parsedPlaylist = parseM3U(data);
+                        playlistItems = parsedPlaylist.items;
 
-    let catDiv = document.createElement('section');
-    catDiv.className = 'category';
+                        // Render the playlist
+                        renderPlaylist(playlistItems);
 
-    let header = document.createElement('div');
-    header.className = 'category-header';
-    header.textContent = `${cat} (${items.length})`;
+                        if (document.getElementsByClassName('channel').length > 0) {
+                            channelPlaceholder.classList.add("d-none");
+                        } else {
+                            channelPlaceholder.classList.remove("d-none");
+                        }
 
-    let btnBaixarTodos = document.createElement('button');
-    btnBaixarTodos.className = 'download-all-btn';
-    btnBaixarTodos.textContent = 'Baixar tudo';
-    btnBaixarTodos.onclick = () => baixarTodos(items);
-    header.appendChild(btnBaixarTodos);
-    catDiv.appendChild(header);
+                        if (parsedPlaylist.billedMsg) {
+                            billedMsgElement.textContent = parsedPlaylist.billedMsg;
+                            billedMsgElement.classList.remove("d-none");
+                        } else {
+                            billedMsgElement.classList.add("d-none");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error loading the M3U file:", error);
+                    });
+            });
 
-    let itemsDiv = document.createElement('div');
-    itemsDiv.className = 'items';
-    let limit = Math.min(items.length, ITEMS_PER_PAGE);
-    for (let i = 0; i < limit; i++) itemsDiv.appendChild(criarItemCard(items[i]));
-    if (items.length > ITEMS_PER_PAGE) {
-      let loadMore = document.createElement('div');
-      loadMore.style.textAlign = 'center';
-      let btnLoadMore = document.createElement('button');
-      btnLoadMore.textContent = `Carregar mais (${items.length - ITEMS_PER_PAGE})`;
-      btnLoadMore.className = 'download-all-btn';
-      btnLoadMore.onclick = () => carregarMaisItens(btnLoadMore, itemsDiv, items, ITEMS_PER_PAGE);
-      loadMore.appendChild(btnLoadMore);
-      catDiv.appendChild(loadMore);
-    }
-    catDiv.appendChild(itemsDiv);
-    container.appendChild(catDiv);
-  });
-}
+            // Search input event listener
+            searchInput.addEventListener("input", () => {
+                const searchText = searchInput.value.trim().toLowerCase();
 
-function criarItemCard(item) {
-  let card = document.createElement('article');
-  card.className = 'item-card';
+                // Filter playlist items based on search input
+                const filteredItems = playlistItems.filter(item => {
+                    return item && item.tvgName && item.tvgName.toLowerCase().includes(searchText.toLowerCase());
+                });
 
-  let img = document.createElement('img');
-  img.className = 'item-img';
-  img.src = item.capa || 'https://via.placeholder.com/300x150?text=Sem+Capa';
-  img.alt = item.nome;
-  card.appendChild(img);
+                // Render the filtered playlist
+                clearPlaylist(false);
+                renderPlaylist(filteredItems);
+            });
+        });
 
-  let content = document.createElement('div');
-  content.className = 'item-content';
-  let title = document.createElement('h3');
-  title.className = 'item-title';
-  title.textContent = item.nome + (item.ano ? ' (' + item.ano + ')' : '');
-  content.appendChild(title);
+        // Function to render the playlist
+        function renderPlaylist(items, target = playlistItemsContainer) {
+            items.forEach((item, index) => {
+                const playlistItem = document.createElement("div");
+                playlistItem.className = "channel d-flex flex-column p-3";
+                playlistItem.textContent = item.tvgName || `Stream ${index + 1}`;
 
-  let plot = document.createElement('div');
-  plot.className = 'item-plot';
-  plot.textContent = item.sinopse || "Sinopse indisponível";
-  content.appendChild(plot);
+                if (item.tvgLogo) {
+                    const logoImage = document.createElement("img");
+                    logoImage.src = item.tvgLogo;
+                    logoImage.className = "tv-logo";
+                    playlistItem.appendChild(logoImage);
+                }
 
-  if (item.atores || item.genero || item.nota) {
-    let meta = document.createElement('div');
-    meta.className = 'item-meta';
-    meta.innerHTML = 
-      (item.genero ? `<b>Gênero:</b> ${item.genero} &nbsp;` : '') + 
-      (item.nota ? `<b>IMDb:</b> ${item.nota} &nbsp;` : '') +
-      (item.atores ? `<b>Atores:</b> ${item.atores}` : '');
-    content.appendChild(meta);
-  }
+                playlistItem.addEventListener("click", async () => {
+                    clearErrorMessage();
+                    try {
+                        if (player !== null) {
+                            await player.destroy();
+                        }
 
-  let btns = document.createElement('div');
-  btns.className = 'item-buttons';
+                        player = new shaka.Player(videoPlayer);
 
-  let btnAssistir = document.createElement('a');
-  btnAssistir.href = item.url;
-  btnAssistir.target = '_blank';
-  btnAssistir.textContent = 'Assistir';
-  btnAssistir.className = 'btn-watch';
-  btns.appendChild(btnAssistir);
+                        // Add error event listener
+                        player.addEventListener('error', onPlayerError);
 
-  let btnDownload = document.createElement('button');
-  btnDownload.textContent = 'Download';
-  btnDownload.className = 'btn-download';
-  btnDownload.onclick = () => baixarItem(item.url, item.nome);
-  btns.appendChild(btnDownload);
+                        // Configure network filters
+                        player.getNetworkingEngine().registerRequestFilter(function(type, request) {
+                            console.log('Outgoing request:', type, request);
+                        });
 
-  content.appendChild(btns);
-  card.appendChild(content);
+                        player.getNetworkingEngine().registerResponseFilter(function(type, response) {
+                            console.log('Incoming response:', type, response);
+                        });
 
-  return card;
-}
+                        if (item.key) {
+                            console.log('Key information:', item.key);
+                            if (item.key.license_type === 'clearkey' && item.key.license_key) {
+                                console.log('Configuring for URL-based license key');
+                                player.configure({
+                                    drm: {
+                                        servers: {
+                                            'org.w3.clearkey': item.key.license_key
+                                        }
+                                    }
+                                });
+                            } else if (item.key.key_id && item.key.key) {
+                                console.log('Configuring for direct key values');
+                                player.configure({
+                                    drm: {
+                                        clearKeys: {
+                                            [item.key.key_id]: item.key.key
+                                        }
+                                    }
+                                });
+                            } else if (item.key.raw_key) {
+                                console.log('Configuring for raw key');
+                                // You might need to adjust this based on how your raw key should be used
+                                player.configure({
+                                    drm: {
+                                        clearKeys: item.key.raw_key
+                                    }
+                                });
+                            }
+                        }
 
-function carregarMaisItens(button, container, items, offset) {
-  let limite = Math.min(items.length, offset + ITEMS_PER_PAGE);
-  for (let i = offset; i < limite; i++) container.appendChild(criarItemCard(items[i]));
-  if (limite >= items.length) button.parentElement.remove();
-  else {
-    button.textContent = `Carregar mais (${items.length - limite})`;
-    button.onclick = () => carregarMaisItens(button, container, items, limite);
-  }
-}
+                        console.log('Loading source:', item.source);
+                        await player.load(item.source);
+                        console.log('Source loaded successfully');
 
-function pesquisar() {
-  let termo = document.getElementById('searchInput').value.toLowerCase().trim();
-  if (!termo) { filtrarPorCategoria(); return; }
-  let resultados = [];
-  Object.values(categorias).forEach(catItems => {
-    resultados.push(...catItems.filter(item => item.nome.toLowerCase().includes(termo)));
-  });
-  let grouped = resultados.reduce((acc, item) => ((acc[item.categoria] = acc[item.categoria] || []).push(item), acc), {});
-  let container = document.getElementById('categories'); container.innerHTML = '';
-  if (resultados.length === 0) {
-    container.innerHTML = '<div class="error">Nenhum resultado encontrado</div>'; return;
-  }
-  for (const [cat, items] of Object.entries(grouped)) {
-    let catDiv = document.createElement('section');
-    catDiv.className = 'category';
-    let header = document.createElement('div');
-    header.className = 'category-header';
-    header.textContent = `${cat} (${items.length})`;
-    catDiv.appendChild(header);
-    let itemsDiv = document.createElement('div');
-    itemsDiv.className = 'items';
-    items.forEach(item => itemsDiv.appendChild(criarItemCard(item)));
-    catDiv.appendChild(itemsDiv);
-    container.appendChild(catDiv);
-  }
-}
+                        videoPlayer.scrollIntoView({ behavior: 'smooth' });
+                        videoPlayer.classList.remove("d-none");
 
-function baixarItem(url, nome) {
-  let a = document.createElement('a');
-  a.href = url;
-  a.download = nome || 'arquivo';
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-function baixarTodos(items) {
-  if (!confirm(`Deseja baixar todos os ${items.length} itens desta categoria?`)) return;
-  items.forEach(item => baixarItem(item.url, item.nome));
-}
-function mostrarLoading() {
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('categories').innerHTML = '';
-}
-function ocultarLoading() {
-  document.getElementById('loading').style.display = 'none';
-}
-function mostrarErro(msg) {
-  const container = document.getElementById('loading');
-  container.innerHTML = `<div class="error">${msg}</div>`;
-  container.style.display = 'block';
-}
-</script>
+                        saveRecentPlayed(item);
+                    } catch (error) {
+                        console.error('Error in renderPlaylist:', error);
+                        onPlayerError(error);
+                        videoPlayer.classList.add("d-none");
+                    }
+                });
+
+                target.appendChild(playlistItem);
+            });
+        }
+
+        function onPlayerError(error) {
+            console.error('Detailed error information:', error);
+            
+            // You can add more specific error handling here
+            if (error.code === shaka.util.Error.Code.DASH_INVALID_XML) {
+                console.error('Invalid DASH manifest');
+            } else if (error.code === shaka.util.Error.Code.BAD_HTTP_STATUS) {
+                console.error('Bad HTTP status');
+            }
+            
+            // Clear any existing error messages
+            clearErrorMessage();
+
+            // Display an error message to the user
+            const errorMessage = document.createElement('div');
+            errorMessage.classList.add('video-error-message');  // Add a class for easy identification
+            errorMessage.textContent = `Error loading video: ${error.message || error.code}`;
+            errorMessage.style.color = 'red';
+            videoPlayer.parentNode.insertBefore(errorMessage, videoPlayer.nextSibling);
+        }
+
+        function clearErrorMessage() {
+            // Clear any existing error messages
+            const existingErrorMessage = document.querySelector('.video-error-message');
+            if (existingErrorMessage) {
+                existingErrorMessage.remove();
+            }
+        }
+
+        function parseM3U(content) {
+            const lines = content.split('\n');
+            const items = [];
+            let currentItem = null;
+            let billedMsg = '';
+
+            for (let line of lines) {
+                line = line.trim();
+
+                if (line.startsWith('#EXTM3U')) {
+                    const billedMsgMatch = line.match(/billed-msg="([^"]+)"/);
+                    if (billedMsgMatch) {
+                        billedMsg = billedMsgMatch[1];
+                    }
+                } else if (line.startsWith('#EXTINF:')) {
+                    currentItem = { tvgName: '', tvgLogo: '', groupTitle: '', source: '', key: null };
+
+                    const tvgIdMatch = line.match(/tvg-id="([^"]+)"/);
+                    if (tvgIdMatch) {
+                        currentItem.tvgId = tvgIdMatch[1];
+                    }
+
+                    const groupTitleMatch = line.match(/group-title="([^"]+)"/);
+                    if (groupTitleMatch) {
+                        currentItem.groupTitle = groupTitleMatch[1];
+                    }
+
+                    const tvgNameMatch = line.match(/tvg-name="([^"]+)"/);
+                    if (tvgNameMatch) {
+                        currentItem.tvgName = tvgNameMatch[1];
+                    } else {
+                        const lastCommaIndex = line.lastIndexOf(",");
+                        if (lastCommaIndex !== -1) {
+                            currentItem.tvgName = line.substring(lastCommaIndex + 1).trim();
+                        }
+                    }
+
+                    const tvgLogoMatch = line.match(/tvg-logo="([^"]+)"/);
+                    if (tvgLogoMatch) {
+                        currentItem.tvgLogo = convertToHttps(tvgLogoMatch[1]);
+                    }
+
+                    // console.log('Parsed EXTINF:', currentItem);
+                } else if (line.startsWith('#KODIPROP:')) {
+                    if (currentItem) {
+                        const keyInfo = extractKey(line);
+                        if (keyInfo) {
+                            if (!currentItem.key) currentItem.key = {};
+                            Object.assign(currentItem.key, keyInfo);
+                            // console.log('Extracted key info:', keyInfo);
+                        }
+                    }
+                } else if (line.length > 0 && !line.startsWith('#')) {
+                    if (currentItem) {
+                        currentItem.source = convertToHttps(line);
+                        items.push(currentItem);
+                        // console.log('Added item:', currentItem);
+                        currentItem = null;
+                    }
+                }
+            }
+
+            // console.log('Parsed M3U items:', items);
+            return { items, billedMsg };
+        }
+
+        function extractKey(line) {
+            if (line.includes('inputstream.adaptive.license_type=')) {
+                return { license_type: line.split('=')[1].trim() };
+            } else if (line.includes('inputstream.adaptive.license_key=')) {
+                const keyValue = line.split('=')[1].trim();
+                
+                // Check if it's a URL
+                if (keyValue.startsWith('http')) {
+                    return { license_key: keyValue };
+                }
+                
+                // Check if it's a direct key (format: key_id:key)
+                const keyParts = keyValue.split(':');
+                if (keyParts.length === 2) {
+                    return {
+                        key_id: keyParts[0],
+                        key: keyParts[1]
+                    };
+                }
+                
+                // Try parsing as JSON
+                try {
+                    const json = JSON.parse(keyValue);
+                    if (json && json.keys && json.keys.length > 0) {
+                        return {
+                            key_id: base64ToHex(json.keys[0].kid),
+                            key: base64ToHex(json.keys[0].k)
+                        };
+                    }
+                } catch (error) {
+                    // If it's not valid JSON, treat it as a raw key
+                    console.log('Key is not in JSON format, treating as raw key:', keyValue);
+                    return { raw_key: keyValue };
+                }
+            }
+            return null;
+        }
+
+        function clearPlaylist(clearItems = true) {
+            // Clear the existing playlist items
+            if (clearItems) {
+                playlistItems = [];
+            }
+
+            const playlistItemsElem = playlistItemsContainer.querySelectorAll('.channel');
+            playlistItemsElem.forEach(item => item.remove());
+        }
+
+        function trimLineBreak(text) {
+            // Replace multiple line breaks with a single line break
+            return text.replace(/[\r\n]{2,}/g, '\n\n');
+        }
+
+        function reorderIndexes(items) {
+            let rearrangedItems = [];
+
+            items.forEach(item => {
+                if (item !== undefined) {
+                    rearrangedItems.push(item);
+                }
+            });
+
+            return rearrangedItems;
+        }
+
+        function base64ToHex(base64) {
+            if (base64.length > 0) {
+                const binary = atob(base64);
+                let hex = '';
+                for (let i = 0; i < binary.length; i++) {
+                    let char = binary.charCodeAt(i).toString(16);
+                    hex += (char.length === 1 ? '0' : '') + char;
+                }
+                return hex;
+            }
+            return base64;
+        }
+
+        function convertToHttps(url) {
+            return url.replace(/^http:/, 'https:');
+        }
+
+        function extractKey(line) {
+            const prefix = '#KODIPROP:inputstream.adaptive.license_key=';
+            const extractedValue = line.substring(line.indexOf(prefix) + prefix.length);
+
+            try {
+                var json = JSON.parse(extractedValue);
+                if (json && json.keys.length > 0) {
+                    const KEY = base64ToHex(json.keys[0].k); // Value of 'k' (KEY)
+                    const ID = base64ToHex(json.keys[0].kid); // Value of 'kid' (ID)
+
+                    return {
+                        'key_id': ID,
+                        'key': KEY
+                    };
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function saveRecentPlayed(item) {
+            // Retrieve the recentPlayed array from localStorage
+            let recentPlayed = JSON.parse(localStorage.getItem("recentPlayed")) || [];
+
+            // Remove the item if it already exists in the list based on tvgId
+            recentPlayed = recentPlayed.filter((entry) => entry.tvgId !== item.tvgId);
+
+            // Add the new item to the beginning of the list
+            recentPlayed.unshift(item);
+
+            // Limit the list to 5 items
+            if (recentPlayed.length > 5) {
+                recentPlayed.pop();
+            }
+
+            // Save the updated list back to localStorage
+            localStorage.setItem("recentPlayed", JSON.stringify(recentPlayed));
+
+            // Reload the recent played items (assuming this function updates the UI)
+            loadRecentPlayed();
+        }
+
+
+        function getRecentPlayed() {
+            const recentPlayed = JSON.parse(localStorage.getItem("recentPlayed")) || [];
+
+            return recentPlayed;
+        }
+
+        function loadRecentPlayed() {
+            recentPlayed = getRecentPlayed();
+            recentPlayedList.innerHTML = "";
+            if (recentPlayed.length > 0) {
+                renderPlaylist(recentPlayed, recentPlayedList);
+                recentPlayedSection.classList.remove("d-none");
+            } else {
+                recentPlayedSection.classList.add("d-none");
+            }
+        }
+
+
+    </script>
 </body>
 </html>
