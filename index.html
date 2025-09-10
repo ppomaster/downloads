@@ -1,224 +1,186 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<title>Streaming App IPTV Moderno</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    html, body { background: linear-gradient(135deg,#08418a 30%,#193c67 100%); min-height: 100vh;}
-    .header-bar { background: #032753; color: #fff; padding: 18px 0 9px 0; text-align: center;}
-    #playlist { background: #f8f9fa; padding: 15px; max-height: 100vh; overflow-y: auto; border-radius: 15px 0 0 15px;}
-    #videoPlayer { width: 100%; border-radius: 10px; background: #000;}
-    .input-group-btn { display: flex; align-items: center; }
-    .btn-go { margin-left: 10px;}
-    .tv-logo { width: 56px; margin-bottom:10px; border-radius:8px;}
-    .channel:hover { box-shadow: 0 0 16px #2cafd6a3; transform: scale(1.03); background:#e1f2fe; cursor: pointer;}
-    .channel { background: #fff; color: #165379; font-weight: 600; border-radius: 11px; margin: 7px 7px 0 0; padding: 13px 8px 8px 8px; text-align:center; min-width: 140px; display: flex; flex-direction: column; align-items:center; transition:.18s;}
-    .modal-img { width:140px;float:left;margin:0 16px 10px 0;}
-    .modal-info { font-size: 1.02rem;}
-    .search-bar { margin-bottom: 10px;}
-    #recentPlayedList { background:rgba(0,0,0,0.08); padding:7px; border-radius:13px; margin-top:5px; margin-bottom:10px; overflow-x:auto;}
-    #recentPlayedList .channel { min-width: 130px; margin-bottom:0;}
-    @media (max-width: 900px){
-        #playlist {border-radius: 0;}
-        .channel { min-width:110px;}
-        .modal-img { width:92px;}
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>TV M3U Mini IPTV</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a174e 40%, #133b8a 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 44px;
+        }
+        .logo-circular {
+            width: 86px; height: 86px; border-radius: 50%; 
+            background: #207bee;
+            margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center;
+        }
+        .logo-circular img {
+            width: 54px; height: 54px;
+        }
+        .circle-menu {
+            display: flex;
+            gap: 8vw;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 25px; margin-bottom: 38px;
+        }
+        .circle-btn {
+            width: 82px; height: 82px;
+            background: rgba(255,255,255,0.13);
+            border: 4px solid #1082cd;
+            border-radius: 50%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            cursor: pointer;
+            margin: 5px 8px;
+            box-shadow: 0 2px 14px #0b213b27;
+            transition: 0.19s;
+        }
+        .circle-btn:active, .circle-btn:hover {
+            background: #21b2fd33;
+            border-color: #14e0fc;
+            transform: scale(1.07);
+        }
+        .circle-btn .icon {
+            font-size: 2.2rem;
+            margin-bottom: 7px;
+        }
+        .circle-btn span {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #e8fcff;
+            margin-top: 3px;
+        }
+        .footer-iptv {
+            position: fixed;
+            left:0; right:0; bottom:0; padding: 13px 0 8px 0;
+            background: #151e45c0;
+            color: #95bfff;
+            text-align: center;
+            font-size: 0.99rem;
+            letter-spacing: 0.01em;
+        }
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .circle-menu { gap: 4vw;}
+            .circle-btn { width:60px;height:60px;}
+            .circle-btn .icon { font-size:1.36rem;}
+            .logo-circular { width:56px; height:56px;}
+            .logo-circular img { width:32px; height:32px;}
+        }
+    </style>
 </head>
 <body>
-<div class="header-bar">
-    <h2 style="font-weight:700;font-size:1.5rem;margin-bottom:0;">TV M3U Lite IPTV</h2>
-</div>
-<div class="container-fluid h-100 mt-2">
-<div class="row d-flex justify-content-center h-100">
-    <div class="col-md-10 order-md-2">
-        <div class="row">
-            <div class="col-12 order-2 order-md-1">
-                <div class="input-group mb-3 mt-2">
-                    <input type="text" id="m3uURL" class="form-control" placeholder="Cole aqui a URL da sua lista M3U">
-                    <div class="input-group-btn">
-                        <button id="loadM3U" class="btn btn-primary btn-go">Go</button>
-                    </div>
-                </div>
+    <div class="main-menu">
+        <div class="logo-circular">
+            <img src="https://img.icons8.com/color/80/000000/movie-projector.png" alt="Logo" />
+        </div>
+        <div class="circle-menu">
+            <div class="circle-btn" onclick="abrirSecao('livetv')">
+                <div class="icon">📺</div>
+                <span>LIVE TV</span>
             </div>
-            <div class="col-12 order-1 order-md-2 mb-2">
-                <video id="videoPlayer" controls autoplay muted class="d-none"></video>
+            <div class="circle-btn" onclick="abrirSecao('epg')">
+                <div class="icon">📅</div>
+                <span>EPG</span>
             </div>
-            <div class="col-12 order-3 mt-3" id="recentPlayedSection">
-                <div style="color:#e2f4fb; font-weight:600; margin-bottom:4px;">Continue Assistindo</div>
-                <div id="recentPlayedList" class="d-flex"></div>
+            <div class="circle-btn" onclick="abrirSecao('vod')">
+                <div class="icon">🎬</div>
+                <span>VOD</span>
+            </div>
+            <div class="circle-btn" onclick="abrirSecao('series')">
+                <div class="icon">📂</div>
+                <span>SERIES</span>
             </div>
         </div>
+        <div id="app"></div>
     </div>
-    <div class="col-md-2 order-md-1" id="playlist">
-        <input type="text" id="searchInput" class="form-control search-bar" placeholder="Buscar canal/filme">
-        <div class="d-flex align-items-center text-secondary mt-4" id="channel-placeholder">Nenhum canal/filme encontrado</div>
-        <div id="playlistItemsContainer" class="d-flex flex-md-column flex-wrap"></div>
+    <div class="footer-iptv">
+        &#x1F4FA; App IPTV demo leve &bull; Funciona até em 1GB RAM &bull; Feito para você!
     </div>
-</div>
-</div>
-
-<!-- Modal para detalhes OMDb -->
-<div class="modal fade" id="itemInfoModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-body modal-info" id="itemInfoContent">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="watchBtn" data-bs-dismiss="modal">Assistir</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="billedMsg" class="billed-msg d-none"></div>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.0/shaka-player.compiled.js"></script>
-<script>
-    // OMDb API key fornecida por você
-    const OMDB_API = 'https://www.omdbapi.com/?apikey=6cbfb854&t=';
-    let playlistItems = [];
-    let player = null;
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const videoPlayer = document.getElementById("videoPlayer");
-        const playlistItemsContainer = document.getElementById("playlistItemsContainer");
-        const loadM3UButton = document.getElementById("loadM3U");
-        const m3uURLInput = document.getElementById("m3uURL");
-        const searchInput = document.getElementById("searchInput");
-        const channelPlaceholder = document.getElementById("channel-placeholder");
-        const recentPlayedList = document.getElementById("recentPlayedList");
-
-        // Última playlist usada
-        const savedPlaylistURL = localStorage.getItem("m3uPlaylistURL");
-        if (savedPlaylistURL) {
-            m3uURLInput.value = savedPlaylistURL;
-            setTimeout(() => loadM3UButton.click(), 500);
+    <script>
+        function abrirSecao(secao) {
+            const app = document.getElementById('app');
+            app.innerHTML = '<div style="margin:40px 0;text-align:center;color:#73d6fd;">Carregando '+secao.toUpperCase()+'...</div>';
+            // Aqui começa o lazy load para cada seção:
+            // O código detalhado de cada bloco (exibir categoria, buscar lista, paginar, abrir modal detalhes)
+            // será carregado ou montado sob demanda quando o usuário clicar!
+            // Exemplo:
+            setTimeout(() => {
+                app.innerHTML = `<div style="max-width:450px;margin:0 auto;">
+                    <input style="width:100%;padding:12px 8px;border-radius:8px;border:1px solid #128bdf;margin-bottom:13px;" 
+                        placeholder="Cole aqui o link da lista M3U..." id="iptvlink${secao}" />
+                    <button onclick="carregarLista('${secao}')" style="padding:10px 35px;background:#207bee;color:#fff;
+                    border:none; border-radius:5px;font-size:1rem;font-weight:600;cursor:pointer;">CARREGAR</button>
+                    <div id="listagem-${secao}" style="margin-top:20px;"></div>
+                </div>`;
+            }, 500);
         }
 
-        loadM3UButton.addEventListener("click", () => {
-            const m3uURL = m3uURLInput.value;
-            localStorage.setItem("m3uPlaylistURL", m3uURL);
-            fetch(m3uURL)
-                .then(resp => resp.text())
-                .then(data => {
-                    clearPlaylist();
-                    const parsedPlaylist = parseM3U(data);
-                    playlistItems = parsedPlaylist.items;
-                    renderPlaylist(playlistItems);
-                    channelPlaceholder.style.display = document.getElementsByClassName('channel').length ? "none" : "flex";
+        function carregarLista(secao) {
+            const url = document.getElementById("iptvlink"+secao).value.trim();
+            const saida = document.getElementById("listagem-"+secao);
+            if (!url) { saida.innerHTML = '<div style="color:#ed5555;">Digite uma URL válida.</div>'; return;}
+            saida.innerHTML = '<div style="color:#28d0ff;">Baixando lista...</div>';
+            fetch(url)
+                .then(resp=>resp.text())
+                .then(texto=>{
+                    // Aqui você pode: 1) Processar o M3U para pegar só categorias e nomes (não processar tudo!), 2) Mostrar só as primeiras 15 entradas
+                    const items = [];
+                    let cur = null;
+                    texto.split('\n').forEach(l=>{
+                        l=l.trim();
+                        if(l.startsWith('#EXTINF:')) {
+                            cur={nome:l.split(',').pop().trim()}; 
+                        } else if(cur && l && !l.startsWith('#')) {
+                            cur.url=l; 
+                            items.push(cur);
+                            cur=null;
+                        }
+                    });
+                    // Paginação (leve)
+                    let pagina=0, porPag=15;
+                    function renderPag(pag) {
+                        saida.innerHTML = items.slice(pag*porPag,(pag+1)*porPag).map((it,i)=>
+                            `<div style='background:#fff1;padding:8px 6px;margin:8px 0;
+                            border-radius:6px;color:#124;'>${it.nome}
+                                <button onclick="tocarStream('${it.url.replace(/'/g,"")}', '${it.nome.replace(/'/g,"")}', this)" 
+                                style="float:right;padding:3px 13px;background:#128bdf;color:#fff;border:none;border-radius:4px">▶︎</button>
+                            </div>`).join('');
+                        if((pag+1)*porPag<items.length) 
+                            saida.innerHTML+='<div style="text-align:center;"><button onclick="('+renderPag+').call(this,'+(pag+1)+')" style="margin-top:9px;background:#1761d6;color:#fff;padding:7px 30px;border:none;border-radius:7px;">MAIS</button></div>';
+                    }
+                    renderPag(0);
                 })
-                .catch(error => {
-                    channelPlaceholder.textContent = "Erro ao carregar lista.";
-                    channelPlaceholder.style.display = "flex";
-                    console.error(error);
-                });
-        });
-
-        searchInput.addEventListener("input", () => {
-            const searchText = searchInput.value.trim().toLowerCase();
-            const filteredItems = playlistItems.filter(item => item && item.tvgName && item.tvgName.toLowerCase().includes(searchText));
-            clearPlaylist(false);
-            renderPlaylist(filteredItems);
-            channelPlaceholder.style.display = filteredItems.length ? "none" : "flex";
-        });
-
-        function renderPlaylist(items, target = playlistItemsContainer) {
-            target.innerHTML = "";
-            items.forEach((item, index) => {
-                const playlistItem = document.createElement("div");
-                playlistItem.className = "channel";
-                if (item.tvgLogo) {
-                    const logoImage = document.createElement("img");
-                    logoImage.src = item.tvgLogo;
-                    logoImage.className = "tv-logo";
-                    logoImage.onerror = () => logoImage.style.display = "none";
-                    playlistItem.appendChild(logoImage);
-                }
-                const nameDiv = document.createElement("div");
-                nameDiv.textContent = item.tvgName || `Canal/Filme ${index+1}`;
-                playlistItem.appendChild(nameDiv);
-
-                // CLICAR no item abre o modal com sinopse, elenco, nota, capa
-                playlistItem.addEventListener("click", () => showItemDetails(item));
-
-                target.appendChild(playlistItem);
-            });
+                .catch(()=>{saida.innerHTML='<span style="color:#d23;">Falha ao baixar/processar lista.</span>';});
         }
 
-        function showItemDetails(item) {
-            fetch(OMDB_API + encodeURIComponent(item.tvgName))
-            .then(resp => resp.json())
-            .then(data => {
-                let content = '';
-                if (data && data.Response === "True") {
-                    content += `<img src="${data.Poster}" class="modal-img" alt="Poster" />`;
-                    content += `<strong>${data.Title} (${data.Year})</strong><br>`;
-                    content += `<small><b>Nota IMDb:</b> ${data.imdbRating} | <b>Tipo:</b> ${data.Type} | <b>Gênero:</b> ${data.Genre}</small><br>`;
-                    content += `<em>${data.Plot}</em><br>`;
-                    content += `<div><b>Elenco:</b> ${data.Actors}</div>`;
-                } else {
-                    content = `<strong>${item.tvgName}</strong><br><em>Sem informações na OMDb para esse título.</em>`;
-                }
-                document.getElementById("itemInfoContent").innerHTML = content;
-                // Salvar endereço do vídeo para botão assistir
-                document.getElementById("watchBtn").onclick = function(){
-                   playVideo(item.source);
-                };
-                new bootstrap.Modal(document.getElementById('itemInfoModal')).show();
-            });
+        function tocarStream(url, nome, btn) {
+            // Monta player leve na tela, removendo anterior
+            let p = document.getElementById('player-iptv-app');
+            if (p) p.remove();
+            let src = url.startsWith('http') ? url : '';
+            const tag = document.createElement('div');
+            tag.id = 'player-iptv-app';
+            tag.innerHTML = `<div style="background:#06193B;padding:14px;border-radius:8px;margin:17px 0;">
+                    <b style="color:#80c6fa;">${nome}</b><br>
+                    <video controls autoplay style="width:97%;background:#000;border-radius:8px;margin-top:8px;max-height:38vh;">
+                        <source src="${src}">
+                        Não suportado.
+                    </video>
+                </div>`;
+            btn.parentNode.parentNode.appendChild(tag);
         }
-
-        function playVideo(sourceUrl) {
-            const videoPlayer = document.getElementById("videoPlayer");
-            videoPlayer.src = sourceUrl;
-            videoPlayer.classList.remove("d-none");
-            videoPlayer.play();
-            window.scrollTo({top:0, behavior:"smooth"});
-        }
-
-        function clearPlaylist(clearItems = true) {
-            if (clearItems) playlistItems = [];
-            const playlistItemsElem = playlistItemsContainer.querySelectorAll('.channel');
-            playlistItemsElem.forEach(item => item.remove());
-        }
-
-        // Utilitários M3U (básico)
-        function parseM3U(content) {
-            const lines = content.split('\n');
-            const items = [];
-            let currentItem = null;
-            for (let line of lines) {
-                line = line.trim();
-                if (line.startsWith('#EXTINF:')) {
-                    currentItem = {tvgName:'',tvgLogo:'',source:''};
-                    const tvgLogoMatch = line.match(/tvg-logo="([^"]+)"/);
-                    if (tvgLogoMatch) currentItem.tvgLogo = convertToHttps(tvgLogoMatch[1]);
-                    const groupTitleMatch = line.match(/group-title="([^"]+)"/);
-                    if (groupTitleMatch) currentItem.groupTitle = groupTitleMatch[1];
-                    const tvgNameMatch = line.match(/tvg-name="([^"]+)"/);
-                    if (tvgNameMatch) currentItem.tvgName = tvgNameMatch[1];
-                    else {
-                        const lastCommaIndex = line.lastIndexOf(",");
-                        if (lastCommaIndex !== -1) currentItem.tvgName = line.substring(lastCommaIndex + 1).trim();
-                    }
-                } else if (line.length > 0 && !line.startsWith('#')) {
-                    if (currentItem) {
-                        currentItem.source = convertToHttps(line);
-                        items.push(currentItem);
-                        currentItem = null;
-                    }
-                }
-            }
-            return { items };
-        }
-        function convertToHttps(url) {
-            return url && url.indexOf('http:') === 0 ? url.replace('http:', 'https:') : url;
-        }
-    });
-</script>
+    </script>
 </body>
 </html>
