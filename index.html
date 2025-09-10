@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TV M3U Lite - VOD</title>
+<title>TV M3U Lite - Carregar Link</title>
 <style>
   * {
     margin: 0; padding: 0; box-sizing: border-box;
   }
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: Arial, sans-serif;
     background: #f0f0f0;
     color: #222;
     font-size: 15px;
@@ -41,15 +41,15 @@
     gap: 10px;
     margin-bottom: 15px;
   }
-  .search-input, .category-select {
+  input.url-input {
     flex: 1;
-    min-width: 200px;
+    min-width: 250px;
     padding: 8px 10px;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 5px;
   }
-  button.search-btn {
+  button.load-btn, button.search-btn {
     background-color: #2e7d32;
     color: white;
     padding: 8px 18px;
@@ -59,8 +59,15 @@
     cursor: pointer;
     transition: background-color 0.3s;
   }
-  button.search-btn:hover {
+  button.load-btn:hover, button.search-btn:hover {
     background-color: #256622;
+  }
+  select.category-select {
+    min-width: 200px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
   }
   .categories {
     display: flex;
@@ -145,17 +152,19 @@
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.25s;
+    text-align: center;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
   }
   .btn-watch {
     background-color: #2e7d32;
-    color: white;
   }
   .btn-watch:hover {
     background-color: #256622;
   }
   .btn-download {
     background-color: #555;
-    color: white;
   }
   .btn-download:hover {
     background-color: #333;
@@ -176,44 +185,50 @@
 </head>
 <body>
 
-<header>TV M3U Lite - VOD</header>
+<header>TV M3U Lite - Carregar Link</header>
 
 <main>
   <div class="controls">
+    <input class="url-input" type="text" id="m3uUrl" placeholder="Cole aqui o link da lista M3U" />
+    <button class="load-btn" onclick="carregarLista()">Carregar Lista</button>
+  </div>
+
+  <div class="controls" style="margin-top:0;">
     <input type="text" id="searchInput" placeholder="Pesquisar pelo nome..." class="search-input" />
     <button class="search-btn" onclick="pesquisar()">Buscar</button>
     <select id="categoryFilter" class="category-select" onchange="filtrarPorCategoria()">
       <option value="all">Todas categorias</option>
     </select>
   </div>
-  <div id="loading" class="loading">Carregando lista...</div>
+
+  <div id="loading" class="loading" style="display:none;">Carregando lista...</div>
   <div id="categories" class="categories"></div>
 </main>
 
 <script>
-const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts';
 const ITEMS_PER_PAGE = 12;
-
 let allItems = [];
 let categorias = {};
 let categoriaAtual = 'all';
 
-window.addEventListener('load', () => {
-  carregarLista(M3U_URL);
-});
+function carregarLista() {
+  const urlInput = document.getElementById('m3uUrl').value.trim();
+  if (!urlInput) {
+    alert('Por favor, cole o link da lista M3U antes de carregar.');
+    return;
+  }
 
-function carregarLista(url) {
   mostrarLoading();
-  fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`Erro ao carregar a lista: ${response.status} ${response.statusText}`);
-      return response.text();
+  fetch(urlInput)
+    .then(resp => {
+      if (!resp.ok) throw new Error(`Erro ao carregar a lista: ${resp.status} ${resp.statusText}`);
+      return resp.text();
     })
     .then(text => {
       processarM3U(text);
       ocultarLoading();
     })
-    .catch(err => mostrarErro(err.message));
+    .catch(erro => mostrarErro(erro.message));
 }
 
 function processarM3U(text) {
@@ -241,29 +256,24 @@ function processarM3U(text) {
 
 function parseExtInf(line) {
   let item = { categoria: 'Geral', nome: '', url: '', capa: '' };
-
   let gtStart = line.indexOf('group-title="');
   if (gtStart !== -1) {
     let gtEnd = line.indexOf('"', gtStart + 13);
     if (gtEnd !== -1) item.categoria = line.substring(gtStart + 13, gtEnd);
   }
-
   let logoStart = line.indexOf('tvg-logo="');
   if (logoStart !== -1) {
     let logoEnd = line.indexOf('"', logoStart + 9);
     if (logoEnd !== -1) item.capa = line.substring(logoStart + 9, logoEnd);
   }
-
   let lastComma = line.lastIndexOf(',');
   if (lastComma !== -1) item.nome = line.substring(lastComma + 1).trim();
-
   return item;
 }
 
 function preencherFiltroCategorias() {
   let select = document.getElementById('categoryFilter');
   while (select.options.length > 1) select.remove(1);
-
   Object.keys(categorias).sort().forEach(cat => {
     let option = document.createElement('option');
     option.value = cat;
@@ -448,9 +458,9 @@ function ocultarLoading() {
   document.getElementById('loading').style.display = 'none';
 }
 
-function mostrarErro(msg) {
+function mostrarErro(mensagem) {
   const container = document.getElementById('loading');
-  container.innerHTML = `<div class="error">${msg}</div>`;
+  container.innerHTML = `<div class="error">${mensagem}</div>`;
   container.style.display = 'block';
 }
 </script>
