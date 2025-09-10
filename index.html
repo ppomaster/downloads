@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>TV M3U Lite</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,17 +11,76 @@
   .controls { background: white; padding: 8px 5px; position: fixed; top: 40px; width: 100%; z-index: 90; border-bottom: 1px solid #ccc; }
   .search-row { display: flex; gap: 5px; margin-bottom: 5px; }
   .search-row input { flex: 1; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
-  .search-row button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; }
+  .search-row button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; cursor: pointer; }
   .filter-row select { width: 100%; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
   .content { margin-top: 110px; padding: 5px; }
-  .category { background: white; margin-bottom: 4px; border-radius: 3px; overflow: hidden; }
-  .category-header { padding: 8px; background: #f5f5f5; font-weight: bold; border-bottom: 1px solid #eee; }
-  .items { display: none; }
-  .item { padding: 8px; border-bottom: 1px solid #f0f0f0; }
-  .item:last-child { border-bottom: none; }
-  .item a { color: #2c3e50; text-decoration: none; display: block; }
-  .load-more { padding: 8px; text-align: center; background: #f9f9f9; }
-  .load-more button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; }
+  .category { background: white; margin-bottom: 12px; border-radius: 3px; overflow: hidden; }
+  .category-header {
+    padding: 8px;
+    background: #f5f5f5;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .download-all-btn {
+    background: #2e7d32;
+    border: none;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+  }
+  .item {
+    background: #fafafa;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+    width: 180px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .item img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    background: #ddd;
+  }
+  .item-content {
+    padding: 8px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .item-title {
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    flex-grow: 1;
+  }
+  .item a, .item button {
+    text-decoration: none;
+  }
+  .download-btn {
+    background: #2e7d32;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+  }
   .loading { text-align: center; padding: 20px; }
   .error { color: #d32f2f; text-align: center; padding: 10px; }
 </style>
@@ -34,7 +93,7 @@
 
 <div class="controls">
   <div class="search-row">
-    <input type="text" id="searchInput" placeholder="Pesquisar..." onkeypress="if(event.key=='Enter')pesquisar()">
+    <input type="text" id="searchInput" placeholder="Pesquisar..." onkeypress="if(event.key=='Enter') pesquisar()">
     <button onclick="pesquisar()">Buscar</button>
   </div>
   <div class="filter-row">
@@ -50,235 +109,291 @@
 </div>
 
 <script>
-// Configurações
 const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts';
 const ITEMS_PER_PAGE = 8; // Reduzido para melhor performance
 
-// Variáveis globais mínimas
 var allItems = [];
 var categorias = {};
 var categoriaAtual = 'all';
 
-// Inicialização
-window.addEventListener('load', function() {
+window.addEventListener('load', () => {
   setTimeout(carregarListaM3U, 100);
 });
 
-// Carregar lista M3U
 function carregarListaM3U() {
   showLoading();
-  
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', M3U_URL);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        processarM3U(xhr.responseText);
-        hideLoading();
-      } else {
-        showError('Erro ao carregar');
-      }
-    }
-  };
-  xhr.send();
+  fetch(M3U_URL)
+    .then(resp => {
+      if (!resp.ok) throw new Error('Erro ao carregar');
+      return resp.text();
+    })
+    .then(text => {
+      processarM3U(text);
+      hideLoading();
+    })
+    .catch(e => showError(e.message));
 }
 
-// Processar conteúdo M3U
 function processarM3U(text) {
   allItems = [];
   categorias = {};
-  
-  var lines = text.split('\n');
-  var currentItem = null;
-  
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim();
-    
+  let lines = text.split('\n');
+  let currentItem = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+
     if (line.startsWith('#EXTINF:')) {
       currentItem = parseExtInf(line);
-    } 
-    else if (currentItem && line && !line.startsWith('#') && line.startsWith('http')) {
+    } else if (currentItem && line && !line.startsWith('#') && line.startsWith('http')) {
       currentItem.url = line;
       allItems.push(currentItem);
-      
+
       if (!categorias[currentItem.categoria]) {
         categorias[currentItem.categoria] = [];
       }
       categorias[currentItem.categoria].push(currentItem);
-      
       currentItem = null;
     }
   }
-  
   preencherFiltroCategorias();
   filtrarPorCategoria();
 }
 
-// Parse simples de EXTINF
 function parseExtInf(line) {
-  var item = { categoria: 'Geral', nome: '', url: '' };
-  
-  // Extrair group-title
-  var gtStart = line.indexOf('group-title="');
+  let item = { categoria: 'Geral', nome: '', url: '', capa: '' };
+
+  // group-title
+  let gtStart = line.indexOf('group-title="');
   if (gtStart > -1) {
-    var gtEnd = line.indexOf('"', gtStart + 13);
+    let gtEnd = line.indexOf('"', gtStart + 13);
     if (gtEnd > -1) {
       item.categoria = line.substring(gtStart + 13, gtEnd);
     }
   }
-  
-  // Extrair nome
-  var lastComma = line.lastIndexOf(',');
+
+  // tvg-logo (capa)
+  let logoStart = line.indexOf('tvg-logo="');
+  if (logoStart > -1) {
+    let logoEnd = line.indexOf('"', logoStart + 9);
+    if (logoEnd > -1) {
+      item.capa = line.substring(logoStart + 9, logoEnd);
+    }
+  }
+
+  // nome
+  let lastComma = line.lastIndexOf(',');
   if (lastComma > -1) {
     item.nome = line.substring(lastComma + 1).trim();
   }
-  
+
   return item;
 }
 
-// Preencher filtro de categorias
 function preencherFiltroCategorias() {
-  var select = document.getElementById('categoryFilter');
+  let select = document.getElementById('categoryFilter');
   while (select.options.length > 1) select.remove(1);
-  
-  var cats = Object.keys(categorias).sort();
-  for (var i = 0; i < cats.length; i++) {
-    var opt = document.createElement('option');
-    opt.value = cats[i];
-    opt.textContent = cats[i];
+
+  let cats = Object.keys(categorias).sort();
+  cats.forEach(cat => {
+    let opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
     select.appendChild(opt);
-  }
+  });
 }
 
-// Filtrar por categoria
 function filtrarPorCategoria() {
   categoriaAtual = document.getElementById('categoryFilter').value;
   renderizarCategorias();
 }
 
-// Renderizar categorias
 function renderizarCategorias() {
-  var container = document.getElementById('categories');
+  let container = document.getElementById('categories');
   container.innerHTML = '';
+
+  let catsToShow = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
   
-  var catsToShow = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
-  
-  for (var i = 0; i < catsToShow.length; i++) {
-    var cat = catsToShow[i];
-    var items = categorias[cat] || [];
-    
-    if (items.length === 0) continue;
-    
-    var catDiv = createCategoryDiv(cat, items);
+  catsToShow.forEach(cat => {
+    let items = categorias[cat] || [];
+    if (items.length === 0) return;
+
+    let catDiv = document.createElement('div');
+    catDiv.className = 'category';
+
+    // Header com botão baixar tudo
+    let header = document.createElement('div');
+    header.className = 'category-header';
+    header.textContent = `${cat} (${items.length})`;
+
+    let downloadAllBtn = document.createElement('button');
+    downloadAllBtn.className = 'download-all-btn';
+    downloadAllBtn.textContent = 'Baixar tudo';
+    downloadAllBtn.onclick = () => baixarTodos(items);
+    header.appendChild(downloadAllBtn);
+    catDiv.appendChild(header);
+
+    // Container dos itens
+    let itemsDiv = document.createElement('div');
+    itemsDiv.className = 'items';
+
+    // Renderizar itens da categoria paginados
+    let count = Math.min(items.length, ITEMS_PER_PAGE);
+    for (let i = 0; i < count; i++) {
+      itemsDiv.appendChild(createItemCard(items[i]));
+    }
+
+    // Botão carregar mais
+    if (items.length > ITEMS_PER_PAGE) {
+      let loadMore = document.createElement('div');
+      loadMore.className = 'load-more';
+      loadMore.innerHTML = `<button onclick="loadMoreItems(this, '${cat}', ${ITEMS_PER_PAGE})">Carregar mais (${items.length - ITEMS_PER_PAGE})</button>`;
+      itemsDiv.appendChild(loadMore);
+    }
+
+    catDiv.appendChild(itemsDiv);
     container.appendChild(catDiv);
-  }
+  });
 }
 
-// Criar div de categoria
-function createCategoryDiv(cat, items) {
-  var div = document.createElement('div');
-  div.className = 'category';
-  
-  var header = document.createElement('div');
-  header.className = 'category-header';
-  header.innerHTML = cat + ' (' + items.length + ')';
-  header.onclick = function() {
-    var itemsDiv = this.nextElementSibling;
-    itemsDiv.style.display = itemsDiv.style.display === 'block' ? 'none' : 'block';
-  };
-  
-  var itemsDiv = document.createElement('div');
-  itemsDiv.className = 'items';
-  
-  // Adicionar itens iniciais
-  var count = Math.min(items.length, ITEMS_PER_PAGE);
-  for (var i = 0; i < count; i++) {
-    itemsDiv.appendChild(createItemDiv(items[i]));
-  }
-  
-  // Botão carregar mais se necessário
-  if (items.length > ITEMS_PER_PAGE) {
-    var loadMore = document.createElement('div');
-    loadMore.className = 'load-more';
-    loadMore.innerHTML = '<button onclick="loadMoreItems(this, \'' + cat + '\', ' + ITEMS_PER_PAGE + ')">Carregar mais (' + (items.length - ITEMS_PER_PAGE) + ')</button>';
-    itemsDiv.appendChild(loadMore);
-  }
-  
-  div.appendChild(header);
-  div.appendChild(itemsDiv);
-  return div;
-}
-
-// Criar div de item
-function createItemDiv(item) {
-  var div = document.createElement('div');
+function createItemCard(item) {
+  let div = document.createElement('div');
   div.className = 'item';
-  div.innerHTML = '<a href="' + item.url + '" target="_blank">' + item.nome + '</a>';
+
+  // Imagem capa
+  let img = document.createElement('img');
+  img.src = item.capa || 'https://via.placeholder.com/300x150?text=Sem+Capa';
+  img.style.width = '100%';
+  img.style.height = '150px';
+  img.style.objectFit = 'cover';
+  div.appendChild(img);
+
+  // Conteúdo e botões
+  let contentDiv = document.createElement('div');
+  contentDiv.className = 'item-content';
+  contentDiv.style.padding = '6px';
+
+  // Título
+  let title = document.createElement('div');
+  title.className = 'item-title';
+  title.textContent = item.nome;
+  contentDiv.appendChild(title);
+
+  // Botão de "Assistir"
+  let playLink = document.createElement('a');
+  playLink.href = item.url;
+  playLink.target = '_blank';
+  playLink.textContent = 'Assistir';
+  playLink.style.textDecoration = 'none';
+  playLink.style.color = '#2e7d32';
+  playLink.style.fontWeight = 'bold';
+  playLink.style.marginRight = '6px';
+  contentDiv.appendChild(playLink);
+
+  // Botão de Download
+  let downloadBtn = document.createElement('button');
+  downloadBtn.className = 'download-btn';
+  downloadBtn.textContent = 'Download';
+  downloadBtn.style.background = '#2e7d32';
+  downloadBtn.style.color = '#fff';
+  downloadBtn.style.border = 'none';
+  downloadBtn.style.borderRadius = '3px';
+  downloadBtn.style.padding = '6px 10px';
+  downloadBtn.style.cursor = 'pointer';
+  downloadBtn.onclick = () => baixarItem(item.url, item.nome);
+  contentDiv.appendChild(downloadBtn);
+
+  div.appendChild(contentDiv);
+
   return div;
 }
 
-// Carregar mais itens
 function loadMoreItems(button, cat, offset) {
-  var itemsDiv = button.parentElement.parentElement;
-  var items = categorias[cat];
-  
-  for (var i = offset; i < Math.min(items.length, offset + ITEMS_PER_PAGE); i++) {
-    itemsDiv.insertBefore(createItemDiv(items[i]), button.parentElement);
+  let itemsDiv = button.parentElement;
+  let items = categorias[cat];
+  let nextItems = Math.min(items.length, offset + ITEMS_PER_PAGE);
+
+  for (let i = offset; i < nextItems; i++) {
+    itemsDiv.insertBefore(createItemCard(items[i]), button);
   }
-  
-  if (i >= items.length) {
-    button.parentElement.remove();
+
+  if (nextItems >= items.length) {
+    button.remove();
   } else {
-    button.textContent = 'Carregar mais (' + (items.length - i) + ')';
-    button.onclick = function() { loadMoreItems(this, cat, i); };
+    button.textContent = `Carregar mais (${items.length - nextItems})`;
+    button.onclick = () => loadMoreItems(button, cat, nextItems);
   }
 }
 
-// Pesquisar
 function pesquisar() {
-  var query = document.getElementById('searchInput').value.toLowerCase().trim();
-  
+  let query = document.getElementById('searchInput').value.toLowerCase().trim();
   if (!query) {
     filtrarPorCategoria();
     return;
   }
-  
-  var container = document.getElementById('categories');
+
+  let container = document.getElementById('categories');
   container.innerHTML = '';
-  
-  var results = [];
-  for (var cat in categorias) {
-    for (var i = 0; i < categorias[cat].length; i++) {
-      var item = categorias[cat][i];
+
+  let results = [];
+  Object.values(categorias).forEach(catItems => {
+    catItems.forEach(item => {
       if (item.nome.toLowerCase().includes(query)) {
         results.push(item);
       }
-    }
-  }
-  
+    });
+  });
+
   if (results.length === 0) {
     container.innerHTML = '<div class="category">Nenhum resultado encontrado</div>';
     return;
   }
-  
-  // Agrupar resultados por categoria
-  var grouped = {};
-  for (var i = 0; i < results.length; i++) {
-    var cat = results[i].categoria;
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(results[i]);
-  }
-  
-  // Mostrar resultados
-  for (var cat in grouped) {
-    var catDiv = createCategoryDiv(cat, grouped[cat]);
-    // Expandir automaticamente os resultados de pesquisa
-    catDiv.querySelector('.items').style.display = 'block';
+
+  // Agrupar por categoria
+  let grouped = {};
+  results.forEach(item => {
+    if (!grouped[item.categoria]) grouped[item.categoria] = [];
+    grouped[item.categoria].push(item);
+  });
+
+  for (let cat in grouped) {
+    let catDiv = document.createElement('div');
+    catDiv.className = 'category';
+
+    let header = document.createElement('div');
+    header.className = 'category-header';
+    header.textContent = `${cat} (${grouped[cat].length})`;
+    catDiv.appendChild(header);
+
+    let itemsDiv = document.createElement('div');
+    itemsDiv.className = 'items';
+
+    grouped[cat].forEach(item => {
+      itemsDiv.appendChild(createItemCard(item));
+    });
+
+    catDiv.appendChild(itemsDiv);
     container.appendChild(catDiv);
   }
 }
 
-// Utilitários
+function baixarItem(url, nome) {
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = nome || 'arquivo';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function baixarTodos(items) {
+  if (!confirm(`Deseja baixar todos os ${items.length} itens desta categoria?`)) return;
+  for (let item of items) {
+    baixarItem(item.url, item.nome);
+  }
+}
+
 function showLoading() {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('categories').innerHTML = '';
@@ -294,4 +409,4 @@ function showError(msg) {
 </script>
 
 </body>
-</html> 
+</html>
