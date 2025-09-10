@@ -3,188 +3,217 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TV M3U Lite</title>
+<title>TV M3U Lite - VOD</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
   body {
-    font-family: Arial, sans-serif;
-    background: #e0e0e0;
-    color: #333;
-    font-size: 14px;
-    line-height: 1.3;
-    padding: 5px;
-  }
-  .header {
-    background: #2e7d32;
-    color: white;
-    padding: 10px 5px;
-    text-align: center;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 100;
-  }
-  .controls {
-    background: white;
-    padding: 8px 5px;
-    position: fixed;
-    top: 40px;
-    width: 100%;
-    z-index: 90;
-    border-bottom: 1px solid #ccc;
-  }
-  .search-row {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 5px;
-  }
-  .search-row input {
-    flex: 1;
-    padding: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-  }
-  .search-row button {
-    padding: 6px 12px;
-    background: #2e7d32;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  .filter-row select {
-    width: 100%;
-    padding: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-  }
-  .content {
-    margin-top: 110px;
-    padding: 5px;
-  }
-  .category {
-    background: white;
-    margin-bottom: 12px;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .category-header {
-    padding: 8px;
-    background: #f5f5f5;
-    font-weight: bold;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .download-all-btn {
-    background: #2e7d32;
-    border: none;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 3px;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px;
-  }
-  .item {
-    background: #fafafa;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-    width: 180px;
-    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f0f0;
+    color: #222;
+    font-size: 15px;
+    line-height: 1.4;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
-  .item img {
+  header {
+    background-color: #2e7d32;
+    padding: 15px 10px;
+    color: white;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  main {
+    flex-grow: 1;
+    padding: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .search-input, .category-select {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  button.search-btn {
+    background-color: #2e7d32;
+    color: white;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button.search-btn:hover {
+    background-color: #256622;
+  }
+  .categories {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .category {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  }
+  .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2e7d32;
+  }
+  .download-all-btn {
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .download-all-btn:hover {
+    background-color: #256622;
+  }
+  .items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(200px,1fr));
+    gap: 20px;
+  }
+  .item-card {
+    background: #fafafa;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+  }
+  .item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.15);
+  }
+  .item-img {
     width: 100%;
-    height: 100px;
+    height: 120px;
     object-fit: cover;
     background: #ddd;
   }
   .item-content {
-    padding: 8px;
+    padding: 12px 15px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
   }
   .item-title {
-    font-size: 14px;
-    color: #2c3e50;
-    margin-bottom: 8px;
-    flex-grow: 1;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: #1b1b1b;
+    min-height: 48px;
+    overflow: hidden;
   }
-  .item a, .item button {
-    text-decoration: none;
+  .item-buttons {
+    display: flex;
+    gap: 10px;
   }
-  .download-btn {
-    background: #2e7d32;
+  .btn-watch, .btn-download {
+    flex: 1;
+    padding: 8px 10px;
     border: none;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 3px;
+    border-radius: 6px;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 13px;
-    width: 100%;
-    box-sizing: border-box;
+    transition: background-color 0.25s;
   }
-  .loading { text-align: center; padding: 20px; }
-  .error { color: #d32f2f; text-align: center; padding: 10px; }
+  .btn-watch {
+    background-color: #2e7d32;
+    color: white;
+  }
+  .btn-watch:hover {
+    background-color: #256622;
+  }
+  .btn-download {
+    background-color: #555;
+    color: white;
+  }
+  .btn-download:hover {
+    background-color: #333;
+  }
+  .loading {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #2e7d32;
+    padding: 40px 0;
+  }
+  .error {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #d32f2f;
+    padding: 20px 0;
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>TV M3U Lite</h1>
-</div>
+<header>TV M3U Lite - VOD</header>
 
-<div class="controls">
-  <div class="search-row">
-    <input type="text" id="searchInput" placeholder="Pesquisar..." onkeypress="if(event.key==='Enter') pesquisar()" />
-    <button onclick="pesquisar()">Buscar</button>
-  </div>
-  <div class="filter-row">
-    <select id="categoryFilter" onchange="filtrarPorCategoria()">
+<main>
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Pesquisar pelo nome..." class="search-input" />
+    <button class="search-btn" onclick="pesquisar()">Buscar</button>
+    <select id="categoryFilter" class="category-select" onchange="filtrarPorCategoria()">
       <option value="all">Todas categorias</option>
     </select>
   </div>
-</div>
-
-<div class="content">
-  <div id="categories"></div>
   <div id="loading" class="loading">Carregando lista...</div>
-</div>
+  <div id="categories" class="categories"></div>
+</main>
 
 <script>
 const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts';
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 12;
 
-var allItems = [];
-var categorias = {};
-var categoriaAtual = 'all';
+let allItems = [];
+let categorias = {};
+let categoriaAtual = 'all';
 
 window.addEventListener('load', () => {
-  setTimeout(() => carregarListaM3U(M3U_URL), 100);
+  carregarLista(M3U_URL);
 });
 
-function carregarListaM3U(url) {
-  showLoading();
+function carregarLista(url) {
+  mostrarLoading();
   fetch(url)
-    .then(resp => {
-      if (!resp.ok) throw new Error('Erro ao carregar a lista: ' + resp.statusText);
-      return resp.text();
+    .then(response => {
+      if (!response.ok) throw new Error(`Erro ao carregar a lista: ${response.status} ${response.statusText}`);
+      return response.text();
     })
     .then(text => {
       processarM3U(text);
-      hideLoading();
+      ocultarLoading();
     })
-    .catch(e => showError(e.message));
+    .catch(err => mostrarErro(err.message));
 }
 
 function processarM3U(text) {
@@ -193,12 +222,11 @@ function processarM3U(text) {
   let lines = text.split('\n');
   let currentItem = null;
 
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
-
+  for (let line of lines) {
+    line = line.trim();
     if (line.startsWith('#EXTINF:')) {
       currentItem = parseExtInf(line);
-    } else if (currentItem && line && !line.startsWith('#') && (line.startsWith('http') || line.startsWith('file://'))) {
+    } else if (currentItem && line && !line.startsWith('#') && (line.startsWith('http') || line.startsWith('https'))) {
       currentItem.url = line;
       allItems.push(currentItem);
 
@@ -215,19 +243,19 @@ function parseExtInf(line) {
   let item = { categoria: 'Geral', nome: '', url: '', capa: '' };
 
   let gtStart = line.indexOf('group-title="');
-  if (gtStart > -1) {
+  if (gtStart !== -1) {
     let gtEnd = line.indexOf('"', gtStart + 13);
-    if (gtEnd > -1) item.categoria = line.substring(gtStart + 13, gtEnd);
+    if (gtEnd !== -1) item.categoria = line.substring(gtStart + 13, gtEnd);
   }
 
   let logoStart = line.indexOf('tvg-logo="');
-  if (logoStart > -1) {
+  if (logoStart !== -1) {
     let logoEnd = line.indexOf('"', logoStart + 9);
-    if (logoEnd > -1) item.capa = line.substring(logoStart + 9, logoEnd);
+    if (logoEnd !== -1) item.capa = line.substring(logoStart + 9, logoEnd);
   }
 
   let lastComma = line.lastIndexOf(',');
-  if (lastComma > -1) item.nome = line.substring(lastComma + 1).trim();
+  if (lastComma !== -1) item.nome = line.substring(lastComma + 1).trim();
 
   return item;
 }
@@ -235,11 +263,12 @@ function parseExtInf(line) {
 function preencherFiltroCategorias() {
   let select = document.getElementById('categoryFilter');
   while (select.options.length > 1) select.remove(1);
+
   Object.keys(categorias).sort().forEach(cat => {
-    let opt = document.createElement('option');
-    opt.value = cat;
-    opt.textContent = cat;
-    select.appendChild(opt);
+    let option = document.createElement('option');
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
   });
 }
 
@@ -252,37 +281,44 @@ function renderizarCategorias() {
   let container = document.getElementById('categories');
   container.innerHTML = '';
 
-  let catsToShow = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
+  let categoriasParaExibir = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
 
-  catsToShow.forEach(cat => {
-    let items = categorias[cat] || [];
-    if (items.length === 0) return;
+  categoriasParaExibir.forEach(cat => {
+    let items = categorias[cat];
+    if (!items || items.length === 0) return;
 
-    let catDiv = document.createElement('div');
+    let catDiv = document.createElement('section');
     catDiv.className = 'category';
 
     let header = document.createElement('div');
     header.className = 'category-header';
     header.textContent = `${cat} (${items.length})`;
 
-    let downloadAllBtn = document.createElement('button');
-    downloadAllBtn.className = 'download-all-btn';
-    downloadAllBtn.textContent = 'Baixar tudo';
-    downloadAllBtn.onclick = () => baixarTodos(items);
-    header.appendChild(downloadAllBtn);
+    let btnBaixarTodos = document.createElement('button');
+    btnBaixarTodos.className = 'download-all-btn';
+    btnBaixarTodos.textContent = 'Baixar tudo';
+    btnBaixarTodos.onclick = () => baixarTodos(items);
+
+    header.appendChild(btnBaixarTodos);
     catDiv.appendChild(header);
 
     let itemsDiv = document.createElement('div');
     itemsDiv.className = 'items';
 
-    let count = Math.min(items.length, ITEMS_PER_PAGE);
-    for (let i = 0; i < count; i++) itemsDiv.appendChild(createItemCard(items[i]));
+    let limit = Math.min(items.length, ITEMS_PER_PAGE);
+    for (let i = 0; i < limit; i++) {
+      itemsDiv.appendChild(criarItemCard(items[i]));
+    }
 
     if (items.length > ITEMS_PER_PAGE) {
       let loadMore = document.createElement('div');
       loadMore.className = 'load-more';
-      loadMore.innerHTML = `<button onclick="loadMoreItems(this, '${cat}', ${ITEMS_PER_PAGE})">Carregar mais (${items.length - ITEMS_PER_PAGE})</button>`;
-      itemsDiv.appendChild(loadMore);
+      let btnLoadMore = document.createElement('button');
+      btnLoadMore.textContent = `Carregar mais (${items.length - ITEMS_PER_PAGE})`;
+      btnLoadMore.className = 'download-all-btn';
+      btnLoadMore.onclick = () => carregarMaisItens(btnLoadMore, itemsDiv, items, ITEMS_PER_PAGE);
+      loadMore.appendChild(btnLoadMore);
+      catDiv.appendChild(loadMore);
     }
 
     catDiv.appendChild(itemsDiv);
@@ -290,103 +326,98 @@ function renderizarCategorias() {
   });
 }
 
-function createItemCard(item) {
-  let div = document.createElement('div');
-  div.className = 'item';
+function criarItemCard(item) {
+  let card = document.createElement('article');
+  card.className = 'item-card';
 
   let img = document.createElement('img');
+  img.className = 'item-img';
   img.src = item.capa || 'https://via.placeholder.com/300x150?text=Sem+Capa';
   img.alt = item.nome;
-  div.appendChild(img);
+  card.appendChild(img);
 
-  let contentDiv = document.createElement('div');
-  contentDiv.className = 'item-content';
-  contentDiv.style.padding = '6px';
+  let content = document.createElement('div');
+  content.className = 'item-content';
 
-  let title = document.createElement('div');
+  let title = document.createElement('h3');
   title.className = 'item-title';
   title.textContent = item.nome;
-  contentDiv.appendChild(title);
+  content.appendChild(title);
 
-  let playLink = document.createElement('a');
-  playLink.href = item.url;
-  playLink.target = '_blank';
-  playLink.textContent = 'Assistir';
-  playLink.style.textDecoration = 'none';
-  playLink.style.color = '#2e7d32';
-  playLink.style.fontWeight = 'bold';
-  playLink.style.marginRight = '6px';
-  contentDiv.appendChild(playLink);
+  let btns = document.createElement('div');
+  btns.className = 'item-buttons';
 
-  let downloadBtn = document.createElement('button');
-  downloadBtn.className = 'download-btn';
-  downloadBtn.textContent = 'Download';
-  downloadBtn.onclick = () => baixarItem(item.url, item.nome);
-  contentDiv.appendChild(downloadBtn);
+  let btnAssistir = document.createElement('a');
+  btnAssistir.href = item.url;
+  btnAssistir.target = '_blank';
+  btnAssistir.textContent = 'Assistir';
+  btnAssistir.className = 'btn-watch';
+  btns.appendChild(btnAssistir);
 
-  div.appendChild(contentDiv);
+  let btnDownload = document.createElement('button');
+  btnDownload.textContent = 'Download';
+  btnDownload.className = 'btn-download';
+  btnDownload.onclick = () => baixarItem(item.url, item.nome);
+  btns.appendChild(btnDownload);
 
-  return div;
+  content.appendChild(btns);
+  card.appendChild(content);
+
+  return card;
 }
 
-function loadMoreItems(button, cat, offset) {
-  let itemsDiv = button.parentElement;
-  let items = categorias[cat];
-  let nextItems = Math.min(items.length, offset + ITEMS_PER_PAGE);
-
-  for (let i = offset; i < nextItems; i++) {
-    itemsDiv.insertBefore(createItemCard(items[i]), button);
+function carregarMaisItens(button, container, items, offset) {
+  let limite = Math.min(items.length, offset + ITEMS_PER_PAGE);
+  for (let i = offset; i < limite; i++) {
+    container.appendChild(criarItemCard(items[i]));
   }
-
-  if (nextItems >= items.length) {
-    button.remove();
+  if (limite >= items.length) {
+    button.parentElement.remove();
   } else {
-    button.textContent = `Carregar mais (${items.length - nextItems})`;
-    button.onclick = () => loadMoreItems(button, cat, nextItems);
+    button.textContent = `Carregar mais (${items.length - limite})`;
+    button.onclick = () => carregarMaisItens(button, container, items, limite);
   }
 }
 
 function pesquisar() {
-  let query = document.getElementById('searchInput').value.toLowerCase().trim();
-  if (!query) { filtrarPorCategoria(); return; }
+  let termo = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (!termo) {
+    filtrarPorCategoria();
+    return;
+  }
+  let resultados = [];
+
+  Object.values(categorias).forEach(catItems => {
+    resultados.push(...catItems.filter(item => item.nome.toLowerCase().includes(termo)));
+  });
+
+  let grouped = resultados.reduce((acc, item) => {
+    (acc[item.categoria] = acc[item.categoria] || []).push(item);
+    return acc;
+  }, {});
 
   let container = document.getElementById('categories');
   container.innerHTML = '';
 
-  let results = [];
-  Object.values(categorias).forEach(catItems => {
-    catItems.forEach(item => {
-      if (item.nome.toLowerCase().includes(query)) results.push(item);
-    });
-  });
-
-  if (results.length === 0) {
-    container.innerHTML = '<div class="category">Nenhum resultado encontrado</div>';
+  if (resultados.length === 0) {
+    container.innerHTML = '<div class="error">Nenhum resultado encontrado</div>';
     return;
   }
 
-  let grouped = {};
-  results.forEach(item => {
-    if (!grouped[item.categoria]) grouped[item.categoria] = [];
-    grouped[item.categoria].push(item);
-  });
-
-  for (let cat in grouped) {
-    let catDiv = document.createElement('div');
+  for (const [cat, items] of Object.entries(grouped)) {
+    let catDiv = document.createElement('section');
     catDiv.className = 'category';
 
     let header = document.createElement('div');
     header.className = 'category-header';
-    header.textContent = `${cat} (${grouped[cat].length})`;
+    header.textContent = `${cat} (${items.length})`;
 
     catDiv.appendChild(header);
 
     let itemsDiv = document.createElement('div');
     itemsDiv.className = 'items';
 
-    grouped[cat].forEach(item => {
-      itemsDiv.appendChild(createItemCard(item));
-    });
+    items.forEach(item => itemsDiv.appendChild(criarItemCard(item)));
 
     catDiv.appendChild(itemsDiv);
     container.appendChild(catDiv);
@@ -405,22 +436,22 @@ function baixarItem(url, nome) {
 
 function baixarTodos(items) {
   if (!confirm(`Deseja baixar todos os ${items.length} itens desta categoria?`)) return;
-  for (let item of items) {
-    baixarItem(item.url, item.nome);
-  }
+  items.forEach(item => baixarItem(item.url, item.nome));
 }
 
-function showLoading() {
+function mostrarLoading() {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('categories').innerHTML = '';
 }
 
-function hideLoading() {
+function ocultarLoading() {
   document.getElementById('loading').style.display = 'none';
 }
 
-function showError(msg) {
-  document.getElementById('loading').innerHTML = '<div class="error">' + msg + '</div>';
+function mostrarErro(msg) {
+  const container = document.getElementById('loading');
+  container.innerHTML = `<div class="error">${msg}</div>`;
+  container.style.display = 'block';
 }
 </script>
 
