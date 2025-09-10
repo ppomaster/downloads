@@ -3,17 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>TV M3U Lite</title>
+<title>TV M3U Lite - Carregar por URL</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: Arial, sans-serif; background: #e0e0e0; color: #333; font-size: 14px; line-height: 1.3; }
   .header { background: #2e7d32; color: white; padding: 10px 5px; text-align: center; position: fixed; top: 0; width: 100%; z-index: 100; }
   .controls { background: white; padding: 8px 5px; position: fixed; top: 40px; width: 100%; z-index: 90; border-bottom: 1px solid #ccc; }
+  .load-row { display: flex; gap: 5px; margin-bottom: 5px; }
+  .load-row input { flex: 1; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
+  .load-row button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; cursor: pointer; }
   .search-row { display: flex; gap: 5px; margin-bottom: 5px; }
   .search-row input { flex: 1; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
   .search-row button { padding: 6px 12px; background: #2e7d32; color: white; border: none; border-radius: 3px; cursor: pointer; }
   .filter-row select { width: 100%; padding: 6px; border: 1px solid #ccc; font-size: 14px; }
-  .content { margin-top: 110px; padding: 5px; }
+  .content { margin-top: 140px; padding: 5px; }
   .category { background: white; margin-bottom: 12px; border-radius: 3px; overflow: hidden; }
   .category-header {
     padding: 8px;
@@ -92,8 +95,12 @@
 </div>
 
 <div class="controls">
+  <div class="load-row">
+    <input type="text" id="m3uInput" placeholder="Digite URL ou caminho do arquivo M3U" value="https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts" />
+    <button onclick="carregarListaDigitada()">Carregar Lista</button>
+  </div>
   <div class="search-row">
-    <input type="text" id="searchInput" placeholder="Pesquisar..." onkeypress="if(event.key=='Enter') pesquisar()">
+    <input type="text" id="searchInput" placeholder="Pesquisar..." onkeypress="if(event.key=='Enter') pesquisar()" />
     <button onclick="pesquisar()">Buscar</button>
   </div>
   <div class="filter-row">
@@ -105,33 +112,37 @@
 
 <div class="content">
   <div id="categories"></div>
-  <div id="loading" class="loading">Carregando lista...</div>
+  <div id="loading" class="loading" style="display:none;">Carregando lista...</div>
 </div>
 
 <script>
-const M3U_URL = 'https://cdnvisionplay.xyz/get.php?username=839035601&password=584869&type=m3u_plus&output=mpegts';
-const ITEMS_PER_PAGE = 8; // Reduzido para melhor performance
-
 var allItems = [];
 var categorias = {};
 var categoriaAtual = 'all';
 
-window.addEventListener('load', () => {
-  setTimeout(carregarListaM3U, 100);
-});
+function carregarListaDigitada() {
+  let url = document.getElementById('m3uInput').value.trim();
+  if (!url) {
+    alert('Por favor, digite uma URL ou caminho válido.');
+    return;
+  }
+  carregarListaM3U(url);
+}
 
-function carregarListaM3U() {
+function carregarListaM3U(url) {
   showLoading();
-  fetch(M3U_URL)
+  fetch(url)
     .then(resp => {
-      if (!resp.ok) throw new Error('Erro ao carregar');
+      if (!resp.ok) throw new Error('Erro ao carregar a lista: ' + resp.statusText);
       return resp.text();
     })
     .then(text => {
       processarM3U(text);
       hideLoading();
     })
-    .catch(e => showError(e.message));
+    .catch(e => {
+      showError(e.message);
+    });
 }
 
 function processarM3U(text) {
@@ -145,7 +156,7 @@ function processarM3U(text) {
 
     if (line.startsWith('#EXTINF:')) {
       currentItem = parseExtInf(line);
-    } else if (currentItem && line && !line.startsWith('#') && line.startsWith('http')) {
+    } else if (currentItem && line && !line.startsWith('#') && (line.startsWith('http') || line.startsWith('file://'))) {
       currentItem.url = line;
       allItems.push(currentItem);
 
@@ -156,6 +167,7 @@ function processarM3U(text) {
       currentItem = null;
     }
   }
+
   preencherFiltroCategorias();
   filtrarPorCategoria();
 }
@@ -163,7 +175,6 @@ function processarM3U(text) {
 function parseExtInf(line) {
   let item = { categoria: 'Geral', nome: '', url: '', capa: '' };
 
-  // group-title
   let gtStart = line.indexOf('group-title="');
   if (gtStart > -1) {
     let gtEnd = line.indexOf('"', gtStart + 13);
@@ -171,8 +182,6 @@ function parseExtInf(line) {
       item.categoria = line.substring(gtStart + 13, gtEnd);
     }
   }
-
-  // tvg-logo (capa)
   let logoStart = line.indexOf('tvg-logo="');
   if (logoStart > -1) {
     let logoEnd = line.indexOf('"', logoStart + 9);
@@ -180,8 +189,6 @@ function parseExtInf(line) {
       item.capa = line.substring(logoStart + 9, logoEnd);
     }
   }
-
-  // nome
   let lastComma = line.lastIndexOf(',');
   if (lastComma > -1) {
     item.nome = line.substring(lastComma + 1).trim();
@@ -193,7 +200,6 @@ function parseExtInf(line) {
 function preencherFiltroCategorias() {
   let select = document.getElementById('categoryFilter');
   while (select.options.length > 1) select.remove(1);
-
   let cats = Object.keys(categorias).sort();
   cats.forEach(cat => {
     let opt = document.createElement('option');
@@ -213,7 +219,7 @@ function renderizarCategorias() {
   container.innerHTML = '';
 
   let catsToShow = categoriaAtual === 'all' ? Object.keys(categorias) : [categoriaAtual];
-  
+
   catsToShow.forEach(cat => {
     let items = categorias[cat] || [];
     if (items.length === 0) return;
@@ -221,7 +227,6 @@ function renderizarCategorias() {
     let catDiv = document.createElement('div');
     catDiv.className = 'category';
 
-    // Header com botão baixar tudo
     let header = document.createElement('div');
     header.className = 'category-header';
     header.textContent = `${cat} (${items.length})`;
@@ -233,21 +238,18 @@ function renderizarCategorias() {
     header.appendChild(downloadAllBtn);
     catDiv.appendChild(header);
 
-    // Container dos itens
     let itemsDiv = document.createElement('div');
     itemsDiv.className = 'items';
 
-    // Renderizar itens da categoria paginados
-    let count = Math.min(items.length, ITEMS_PER_PAGE);
+    let count = Math.min(items.length, 8);
     for (let i = 0; i < count; i++) {
       itemsDiv.appendChild(createItemCard(items[i]));
     }
 
-    // Botão carregar mais
-    if (items.length > ITEMS_PER_PAGE) {
+    if (items.length > 8) {
       let loadMore = document.createElement('div');
       loadMore.className = 'load-more';
-      loadMore.innerHTML = `<button onclick="loadMoreItems(this, '${cat}', ${ITEMS_PER_PAGE})">Carregar mais (${items.length - ITEMS_PER_PAGE})</button>`;
+      loadMore.innerHTML = `<button onclick="loadMoreItems(this, '${cat}', 8)">Carregar mais (${items.length - 8})</button>`;
       itemsDiv.appendChild(loadMore);
     }
 
@@ -260,26 +262,20 @@ function createItemCard(item) {
   let div = document.createElement('div');
   div.className = 'item';
 
-  // Imagem capa
   let img = document.createElement('img');
   img.src = item.capa || 'https://via.placeholder.com/300x150?text=Sem+Capa';
-  img.style.width = '100%';
-  img.style.height = '150px';
-  img.style.objectFit = 'cover';
+  img.alt = item.nome;
   div.appendChild(img);
 
-  // Conteúdo e botões
   let contentDiv = document.createElement('div');
   contentDiv.className = 'item-content';
   contentDiv.style.padding = '6px';
 
-  // Título
   let title = document.createElement('div');
   title.className = 'item-title';
   title.textContent = item.nome;
   contentDiv.appendChild(title);
 
-  // Botão de "Assistir"
   let playLink = document.createElement('a');
   playLink.href = item.url;
   playLink.target = '_blank';
@@ -290,7 +286,6 @@ function createItemCard(item) {
   playLink.style.marginRight = '6px';
   contentDiv.appendChild(playLink);
 
-  // Botão de Download
   let downloadBtn = document.createElement('button');
   downloadBtn.className = 'download-btn';
   downloadBtn.textContent = 'Download';
@@ -311,7 +306,7 @@ function createItemCard(item) {
 function loadMoreItems(button, cat, offset) {
   let itemsDiv = button.parentElement;
   let items = categorias[cat];
-  let nextItems = Math.min(items.length, offset + ITEMS_PER_PAGE);
+  let nextItems = Math.min(items.length, offset + 8);
 
   for (let i = offset; i < nextItems; i++) {
     itemsDiv.insertBefore(createItemCard(items[i]), button);
@@ -349,7 +344,6 @@ function pesquisar() {
     return;
   }
 
-  // Agrupar por categoria
   let grouped = {};
   results.forEach(item => {
     if (!grouped[item.categoria]) grouped[item.categoria] = [];
@@ -363,6 +357,7 @@ function pesquisar() {
     let header = document.createElement('div');
     header.className = 'category-header';
     header.textContent = `${cat} (${grouped[cat].length})`;
+
     catDiv.appendChild(header);
 
     let itemsDiv = document.createElement('div');
